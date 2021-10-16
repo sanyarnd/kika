@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--suppress XmlUnusedNamespaceDeclaration -->
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="00001" author="Ekaterina Biryukova">
+        <createTable tableName="account">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="varchar(255)"/>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="varchar(255)"/>
+            <column name="last_modified_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="group">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="owner_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="varchar(255)"/>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="varchar(255)"/>
+            <column name="last_modified_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="group"
+                                 baseColumnNames="owner_id"
+                                 constraintName="fk_group_account_id"
+                                 referencedTableName="account"
+                                 referencedColumnNames="id"/>
+
+        <createTable tableName="account_group_role">
+            <column name="account_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="group_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="account_group_role"
+                                 baseColumnNames="account_id"
+                                 constraintName="fk_role_account_id"
+                                 referencedTableName="account"
+                                 referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint baseTableName="account_group_role"
+                                 baseColumnNames="group_id"
+                                 constraintName="fk_role_group_id"
+                                 referencedTableName="group"
+                                 referencedColumnNames="id"/>
+
+        <addPrimaryKey tableName="account_group_role" columnNames="account_id, group_id"/>
+
+        <createTable tableName="task_list">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_id" type="bigint"/>
+
+            <column name="group_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="varchar(255)"/>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="varchar(255)"/>
+            <column name="last_modified_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="task_list"
+                                 baseColumnNames="parent_id"
+                                 constraintName="fk_list_parent_id"
+                                 referencedTableName="task_list"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="task_list"
+                                 baseColumnNames="group_id"
+                                 constraintName="fk_list_group_id"
+                                 referencedTableName="group"
+                                 referencedColumnNames="id"/>
+
+        <createTable tableName="task_list_account_special_access">
+            <column name="tasklist_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="account_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="task_list_account_special_access" columnNames="account_id, tasklist_id"/>
+        <addForeignKeyConstraint baseTableName="task_list_account_special_access"
+                                 baseColumnNames="tasklist_id"
+                                 constraintName="fk_special_access_tasklist_id"
+                                 referencedTableName="task_list"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="task_list_account_special_access"
+                                 baseColumnNames="account_id"
+                                 constraintName="fk_special_access_account_id"
+                                 referencedTableName="account"
+                                 referencedColumnNames="id"/>
+
+        <createTable tableName="task">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="parent_id" type="bigint"/>
+
+            <column name="list_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="description" type="varchar(512)"/>
+
+            <column name="status" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="varchar(255)"/>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="varchar(255)"/>
+            <column name="last_modified_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="task"
+                                 baseColumnNames="parent_id"
+                                 constraintName="fk_task_parent_id"
+                                 referencedTableName="task"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="task"
+                                 baseColumnNames="list_id"
+                                 constraintName="fk_task_tasklist_id"
+                                 referencedTableName="task_list"
+                                 referencedColumnNames="id"/>
+
+        <createTable tableName="account_task_assignee">
+            <column name="account_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="task_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="account_task_subscriber">
+            <column name="account_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="task_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="account_task_assignee" columnNames="account_id, task_id"/>
+        <addPrimaryKey tableName="account_task_subscriber" columnNames="account_id, task_id"/>
+
+        <addForeignKeyConstraint baseTableName="account_task_assignee"
+                                 baseColumnNames="account_id"
+                                 constraintName="fk_assignee_account_id"
+                                 referencedTableName="account"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="account_task_assignee"
+                                 baseColumnNames="task_id"
+                                 constraintName="fk_assignee_task_id"
+                                 referencedTableName="task"
+                                 referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint baseTableName="account_task_subscriber"
+                                 baseColumnNames="account_id"
+                                 constraintName="fk_subscriber_account_id"
+                                 referencedTableName="account"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="account_task_subscriber"
+                                 baseColumnNames="task_id"
+                                 constraintName="fk_subscriber_task_id"
+                                 referencedTableName="task"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>
