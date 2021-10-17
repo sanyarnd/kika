@@ -1,12 +1,9 @@
 package kika.controller.request;
 
+import javax.validation.constraints.NotNull;
 import kika.domain.AccountRole;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-import javax.validation.constraints.NotNull;
 
 @Getter
 @AllArgsConstructor

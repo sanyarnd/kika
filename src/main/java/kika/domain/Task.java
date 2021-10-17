@@ -1,32 +1,37 @@
 package kika.domain;
 
+import java.util.Set;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.Where;
-
-import javax.persistence.*;
-import java.util.List;
-import java.util.Set;
+import org.jetbrains.annotations.Nullable;
 
 @Entity
 @Getter
 @NoArgsConstructor
 @Table(name = "task")
 public class Task extends AutoPersistableAuditable {
-    @Column(name = "name")
     @Setter
+    @Column(name = "name")
     private String name;
 
-    @Column(name = "description")
     @Setter
+    @Column(name = "description")
     private String description;
 
-    @Column(name = "status")
     @Setter
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private Status status;
 

@@ -7,5 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @Transactional
-public interface AccountTaskSubscriberRepository extends JpaRepository<AccountTaskSubscriber, AccountTaskSubscriber.PK> {
+public interface AccountTaskSubscriberRepository
+    extends JpaRepository<AccountTaskSubscriber, AccountTaskSubscriber.PK> {
 }

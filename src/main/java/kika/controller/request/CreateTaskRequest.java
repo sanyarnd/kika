@@ -4,8 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 @NoArgsConstructor

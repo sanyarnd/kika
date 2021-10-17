@@ -1,11 +1,10 @@
 package kika.controller.request;
 
+import java.util.Collection;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import javax.validation.constraints.NotNull;
-import java.util.Collection;
 
 @Getter
 @NoArgsConstructor

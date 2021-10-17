@@ -1,13 +1,19 @@
 package kika.domain;
 
+import java.io.Serializable;
+import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.MapsId;
+import javax.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import javax.persistence.*;
-import java.io.Serializable;
-import java.util.Objects;
 
 @Getter
 @Setter
@@ -16,7 +22,7 @@ import java.util.Objects;
 @NoArgsConstructor
 public class AccountTaskAssignee implements Serializable {
     @EmbeddedId
-    private AccountTaskAssignee.PK id;
+    private PK id;
 
     @ManyToOne
     @MapsId("accountId")
@@ -52,8 +58,12 @@ public class AccountTaskAssignee implements Serializable {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             AccountTaskAssignee.PK that = (AccountTaskAssignee.PK) o;
             return Objects.equals(accountId, that.accountId) && Objects.equals(taskId, that.taskId);
         }

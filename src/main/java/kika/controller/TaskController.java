@@ -1,15 +1,28 @@
 package kika.controller;
 
-import kika.controller.request.*;
-import kika.controller.response.*;
-import kika.domain.*;
+import java.util.Collection;
+import java.util.stream.Collectors;
+import kika.controller.request.CreateTaskRequest;
+import kika.controller.request.MoveTaskRequest;
+import kika.controller.request.SetNumericPropertyListRequest;
+import kika.controller.request.SetSingleNonNullablePropertyRequest;
+import kika.controller.request.SetSingleNullableStringPropertyRequest;
+import kika.controller.request.SetTaskStatusRequest;
+import kika.controller.response.GetTaskAssigneeResponse;
+import kika.controller.response.GetTaskAssigneesResponse;
+import kika.controller.response.GetTaskResponse;
+import kika.controller.response.GetTaskSubscriberResponse;
+import kika.controller.response.GetTaskSubscribersResponse;
+import kika.domain.Account;
 import kika.service.TaskService;
 import kika.service.dto.TaskDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Collection;
-import java.util.stream.Collectors;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
@@ -35,7 +48,7 @@ public class TaskController {
     public GetTaskResponse getTask(@PathVariable long id) {
         TaskDto task = service.get(id);
         return new GetTaskResponse(task.id(), task.name(), task.description(), task.status(), task.parentId(),
-                task.listId(), task.children());
+            task.listId(), task.children());
     }
 
     @DeleteMapping("/task/{id}")
@@ -57,8 +70,8 @@ public class TaskController {
     public GetTaskAssigneesResponse getTaskAssignees(@PathVariable long id) {
         Collection<Account> assignees = service.getAssignees(id);
         return new GetTaskAssigneesResponse(assignees.stream()
-                .map(account -> new GetTaskAssigneeResponse(account.safeId(), account.getName()))
-                .collect(Collectors.toSet()), assignees.size());
+            .map(account -> new GetTaskAssigneeResponse(account.safeId(), account.getName()))
+            .collect(Collectors.toSet()), assignees.size());
     }
 
     @PostMapping("/task/{id}/subscribers")
@@ -70,8 +83,8 @@ public class TaskController {
     public GetTaskSubscribersResponse getTaskSubscribers(@PathVariable long id) {
         Collection<Account> subscribers = service.getSubscribers(id);
         return new GetTaskSubscribersResponse(subscribers.stream()
-                .map(account -> new GetTaskSubscriberResponse(account.safeId(), account.getName()))
-                .collect(Collectors.toSet()), subscribers.size());
+            .map(account -> new GetTaskSubscriberResponse(account.safeId(), account.getName()))
+            .collect(Collectors.toSet()), subscribers.size());
     }
 
     @PostMapping("/task/{id}/status")

@@ -1,18 +1,19 @@
 package kika.domain;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.data.util.ProxyUtils;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.Serializable;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.util.ProxyUtils;
 
 /**
  * Base class for entities with ID field, cloned [org.springframework.data.jpa.domain.AbstractPersistable].
- *
+ * <p>
  * Uses autoincrement database feature.
  */
 @Getter
@@ -47,6 +48,7 @@ public abstract class AutoPersistable implements Serializable {
     }
 
     @Override
+    @SuppressFBWarnings("BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS")
     public boolean equals(Object o) {
         if (o == null) {
             return false;

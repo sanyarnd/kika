@@ -3,8 +3,7 @@ package kika.controller.request;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 @NoArgsConstructor

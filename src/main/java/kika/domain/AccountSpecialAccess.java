@@ -1,21 +1,27 @@
 package kika.domain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.Serializable;
+import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.MapsId;
+import javax.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
-import javax.persistence.*;
-import java.io.Serializable;
-import java.util.Objects;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "task_list_account_special_access")
 @NoArgsConstructor
+@SuppressFBWarnings("FCCD_FIND_CLASS_CIRCULAR_DEPENDENCY")
 public class AccountSpecialAccess implements Serializable {
     @EmbeddedId
     private PK id;
@@ -47,15 +53,19 @@ public class AccountSpecialAccess implements Serializable {
         @Column(name = "tasklist_id")
         private Long tasklistId;
 
-        public PK(long tasklist_id, long accountId) {
-            this.tasklistId = tasklist_id;
+        public PK(long tasklistId, long accountId) {
+            this.tasklistId = tasklistId;
             this.accountId = accountId;
         }
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             AccountSpecialAccess.PK that = (AccountSpecialAccess.PK) o;
             return Objects.equals(accountId, that.accountId) && Objects.equals(tasklistId, that.tasklistId);
         }

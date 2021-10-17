@@ -1,20 +1,26 @@
 package kika.service;
 
-import kika.controller.response.AccountTaskListsResponse;
-import kika.controller.response.GetTaskResponse;
-import kika.domain.*;
-import kika.repository.*;
-import kika.service.dto.TaskDto;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import kika.domain.Account;
+import kika.domain.AccountTaskAssignee;
+import kika.domain.AccountTaskSubscriber;
+import kika.domain.AutoPersistable;
+import kika.domain.Task;
+import kika.domain.TaskList;
+import kika.repository.AccountRepository;
+import kika.repository.AccountTaskAssigneeRepository;
+import kika.repository.AccountTaskSubscriberRepository;
+import kika.repository.TaskListRepository;
+import kika.repository.TaskRepository;
+import kika.service.dto.TaskDto;
+import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +34,7 @@ public class TaskService {
     private final TaskListService taskListService;
 
     @Transactional
-    public long create(String name, String description, long listId, Long parentId) {
+    public long create(@NotNull String name, @Nullable String description, long listId, Long parentId) {
         Task parent = parentId == null ? null : taskRepository.getById(parentId);
         if(parent != null && parent.getList().safeId() != listId) {
             throw new IllegalArgumentException();
@@ -37,12 +43,12 @@ public class TaskService {
     }
 
     @Transactional
-    public void rename(long id, String name) {
+    public void rename(long id, @NotNull String name) {
         taskRepository.getById(id).setName(name);
     }
 
     @Transactional
-    public void setDescription(long id, String description) {
+    public void setDescription(long id, @Nullable String description) {
         taskRepository.getById(id).setDescription(description);
     }
 
@@ -50,8 +56,8 @@ public class TaskService {
     public TaskDto get(long id) {
         Task task = taskRepository.getById(id);
         return new TaskDto(task.safeId(), task.getName(), task.getDescription(), task.getStatus(),
-                task.getParentId(), task.getList().safeId(),
-                task.getChildren().stream().map(AutoPersistable::safeId).collect(Collectors.toSet()));
+            task.getParentId(), task.getList().safeId(),
+            task.getChildren().stream().map(AutoPersistable::safeId).collect(Collectors.toSet()));
     }
 
     @Transactional
@@ -60,15 +66,15 @@ public class TaskService {
     }
 
     @Transactional
-    public void move(long taskId, Long listId, Long parentId) {
+    public void move(long taskId, @Nullable Long listId, @Nullable Long parentId) {
         Task task = taskRepository.getById(taskId);
-        if(listId != null && task.getList().safeId() != listId) {
+        if (listId != null && task.getList().safeId() != listId) {
             TaskList list = taskListRepository.getById(listId);
             task.setParent(null);
             task.setList(list);
             task.moveChildrenIntoList(list);
         }
-        if(parentId != null) {
+        if (parentId != null) {
             Task parent = taskRepository.getById(parentId);
             if(parent.getList().safeId() != task.getList().safeId()) {
                 throw new IllegalArgumentException(
@@ -79,7 +85,7 @@ public class TaskService {
     }
 
     @Transactional
-    public void assign(long taskId, Collection<Long> assigneeIds) {
+    public void assign(long taskId, @NotNull Collection<Long> assigneeIds) {
         Task task = taskRepository.getById(taskId);
         task.getAssignees().clear();
         Set<Account> accountsWithAccess = new HashSet<>(taskListService.getAccountsWithAccess(task.getList().safeId()));
@@ -100,7 +106,7 @@ public class TaskService {
     }
 
     @Transactional
-    public void subscribe(long taskId, Collection<Long> subscriberIds) {
+    public void subscribe(long taskId, @NotNull Collection<Long> subscriberIds) {
         Task task = taskRepository.getById(taskId);
         task.getSubscribers().clear();
         Set<Account> accountsWithAccess = new HashSet<>(taskListService.getAccountsWithAccess(task.getList().safeId()));
@@ -117,12 +123,12 @@ public class TaskService {
     @Transactional
     public Collection<Account> getSubscribers(long taskId) {
         return taskRepository.getById(taskId).getSubscribers().stream()
-                .map(AccountTaskSubscriber::getAccount)
-                .collect(Collectors.toSet());
+            .map(AccountTaskSubscriber::getAccount)
+            .collect(Collectors.toSet());
     }
 
     @Transactional
-    public void setStatus(long id, Task.Status status) {
+    public void setStatus(long id, @NotNull Task.Status status) {
         taskRepository.getById(id).setStatus(status);
     }
 }

@@ -12,7 +12,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public abstract class AbstractIT {
     @Container
-    public static JdbcDatabaseContainer<?> CONTAINER = new PostgreSQLContainer<>("postgres:14");
+    public static JdbcDatabaseContainer<?> CONTAINER = new PostgreSQLContainer<>("postgres:14")
+        .withUsername("postgres").withPassword("postgres");
 
     @DynamicPropertySource
     static void postgresProperties(DynamicPropertyRegistry registry) {
