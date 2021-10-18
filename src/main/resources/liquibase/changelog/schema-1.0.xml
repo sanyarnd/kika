@@ -221,6 +221,33 @@
                                  constraintName="fk_subscriber_task_id"
                                  referencedTableName="task"
                                  referencedColumnNames="id"/>
+
+        <createTable tableName="group_message">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="group_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="body" type="varchar(512)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="varchar(255)"/>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="varchar(255)"/>
+            <column name="last_modified_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="group_message"
+                                 baseColumnNames="group_id"
+                                 constraintName="fk_messages_group_id"
+                                 referencedTableName="group"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
 </databaseChangeLog>

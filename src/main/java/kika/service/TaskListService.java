@@ -1,25 +1,17 @@
 package kika.service;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-import kika.domain.Account;
-import kika.domain.AccountRole;
-import kika.domain.AccountSpecialAccess;
-import kika.domain.AutoPersistable;
-import kika.domain.TaskList;
-import kika.repository.AccountRepository;
-import kika.repository.AccountSpecialAccessRepository;
-import kika.repository.GroupRepository;
-import kika.repository.TaskListRepository;
-import kika.repository.TaskRepository;
+import kika.domain.*;
+import kika.repository.*;
 import kika.service.dto.TaskDto;
 import kika.service.dto.TaskListDto;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +21,16 @@ public class TaskListService {
     private final GroupRepository groupRepository;
     private final AccountRepository accountRepository;
     private final AccountSpecialAccessRepository accountSpecialAccessRepository;
+
+    private void revokeSpecialAccessRecursively(
+        Set<AccountSpecialAccess> specialAccess,
+        long id,
+        Set<TaskList> children
+    ) {
+        if (specialAccess.removeIf(accSpAcc -> accSpAcc.getAccount().safeId() == id)) {
+            children.forEach(child -> revokeSpecialAccessRecursively(child.getSpecialAccess(), id, children));
+        }
+    }
 
     @Transactional
     public long create(String name, Long parentId, long groupId) {
@@ -75,11 +77,15 @@ public class TaskListService {
     }
 
     @Transactional
-    public void setSpecialAccess(long id, @NotNull Collection<Long> membersWithAccessIds) {
+    public void setSpecialAccess(long id, @NotNull Set<Long> membersWithAccessIds) {
         TaskList taskList = taskListRepository.getById(id);
+        Set<Account> accountsWithPotentialAccess = new HashSet<>(getAccountsWithAccess(id));
+        if (membersWithAccessIds.size() == accountsWithPotentialAccess.size() &&
+            accountsWithPotentialAccess.stream().map(Account::safeId).collect(Collectors.toSet())
+                .containsAll(membersWithAccessIds)) {
+            return;
+        }
         if (!membersWithAccessIds.isEmpty()) {
-            Set<Account> accountsWithPotentialAccess = new HashSet<>(getAccountsWithAccess(id));
-
             if (!accountsWithPotentialAccess.stream()
                 .map(Account::safeId)
                 .collect(Collectors.toSet())
@@ -88,8 +94,9 @@ public class TaskListService {
             }
             // Recursively revoke access from accounts from this list and all its children
             taskList.getSpecialAccess().stream()
-                    .filter(accSpAcc -> membersWithAccessIds.contains(accSpAcc.getAccount().safeId()))
-                    .forEach(accSpAcc -> taskList.revokeSpecialAccessRecursively(accSpAcc.getAccount().safeId()));
+                .filter(accSpAcc -> membersWithAccessIds.contains(accSpAcc.getAccount().safeId()))
+                .forEach(accSpAcc -> revokeSpecialAccessRecursively(taskList.getSpecialAccess(),
+                    accSpAcc.getAccount().safeId(), taskList.getChildren()));
             // Add access to accounts that do not have it yet
             Set<Long> currentAccessIds = taskList.getSpecialAccess().stream()
                 .map(accSpAcc -> accSpAcc.getAccount().safeId())

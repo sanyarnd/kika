@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import kika.controller.request.RegisterAccountRequest;
-import kika.controller.request.SetSingleNonNullablePropertyRequest;
+import kika.controller.request.SingleNonNullablePropertyRequest;
 import kika.controller.response.AccountGroupResponse;
 import kika.controller.response.AccountGroupsResponse;
 import kika.controller.response.AccountTaskListResponse;
@@ -41,7 +41,7 @@ public class AccountController {
     }
 
     @PostMapping("/account/{id}/rename")
-    public void renameAccount(@PathVariable long id, @RequestBody SetSingleNonNullablePropertyRequest request) {
+    public void renameAccount(@PathVariable long id, @RequestBody SingleNonNullablePropertyRequest request) {
         service.rename(id, request.getValue());
     }
 

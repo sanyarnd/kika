@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import kika.controller.request.CreateTaskListRequest;
-import kika.controller.request.SetNumericPropertyListRequest;
-import kika.controller.request.SetSingleNonNullablePropertyRequest;
+import kika.controller.request.NumericPropertyListRequest;
+import kika.controller.request.SingleNonNullablePropertyRequest;
 import kika.controller.response.GetTaskListResponse;
 import kika.controller.response.GetTaskListTasksResponse;
 import kika.controller.response.GetTaskResponse;
@@ -33,7 +33,7 @@ public class TaskListController {
     }
 
     @PostMapping("/list/{id}/rename")
-    public void renameList(@PathVariable long id, @RequestBody SetSingleNonNullablePropertyRequest request) {
+    public void renameList(@PathVariable long id, @RequestBody SingleNonNullablePropertyRequest request) {
         service.rename(id, request.getValue());
     }
 
@@ -49,7 +49,7 @@ public class TaskListController {
     }
 
     @PostMapping("/list/{id}/accounts")
-    public void setListAccess(@PathVariable long id, @RequestBody SetNumericPropertyListRequest request) {
+    public void setListAccess(@PathVariable long id, @RequestBody NumericPropertyListRequest request) {
         service.setSpecialAccess(id, request.getValues());
     }
 

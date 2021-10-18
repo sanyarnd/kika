@@ -4,13 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
-import org.jetbrains.annotations.Nullable;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SetSingleNullableStringPropertyRequest {
+public class SingleNonNullablePropertyRequest {
     @Length(min = 1, max = 128)
-    @Nullable
     private String value;
 }

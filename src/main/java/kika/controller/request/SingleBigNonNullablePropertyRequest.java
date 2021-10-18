@@ -1,14 +1,14 @@
 package kika.controller.request;
 
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SetSingleNonNullableNumericPropertyRequest {
-    @NotNull
-    private long value;
+public class SingleBigNonNullablePropertyRequest {
+    @Length(min = 1, max = 512)
+    private String value;
 }

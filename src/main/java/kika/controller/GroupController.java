@@ -1,18 +1,22 @@
 package kika.controller;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import kika.controller.request.AddGroupMemberRequest;
 import kika.controller.request.CreateGroupRequest;
 import kika.controller.request.SetMemberRoleRequest;
-import kika.controller.request.SetSingleNonNullableNumericPropertyRequest;
-import kika.controller.request.SetSingleNonNullablePropertyRequest;
+import kika.controller.request.SingleNonNullableNumericPropertyRequest;
+import kika.controller.request.SingleNonNullablePropertyRequest;
+import kika.controller.response.GetGroupMessageResponse;
+import kika.controller.response.GetGroupMessagesResponse;
 import kika.controller.response.GetGroupResponse;
 import kika.controller.response.GroupMemberResponse;
 import kika.controller.response.GroupMembersResponse;
 import kika.controller.response.GroupTaskListResponse;
 import kika.controller.response.GroupTaskListsResponse;
 import kika.domain.Group;
+import kika.service.GroupMessageService;
 import kika.service.GroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class GroupController {
     private final GroupService groupService;
+    private final GroupMessageService groupMessageService;
 
     @PostMapping("/group/create")
     public Long createGroup(@RequestBody CreateGroupRequest request) {
@@ -39,7 +44,7 @@ public class GroupController {
     }
 
     @PostMapping("/group/{id}/rename")
-    public void renameGroup(@PathVariable long id, @RequestBody SetSingleNonNullablePropertyRequest request) {
+    public void renameGroup(@PathVariable long id, @RequestBody SingleNonNullablePropertyRequest request) {
         groupService.rename(id, request.getValue());
     }
 
@@ -59,7 +64,7 @@ public class GroupController {
     @PostMapping("/group/{groupId}/owner")
     public void transferGroupOwnership(
         @PathVariable long groupId,
-        @RequestBody SetSingleNonNullableNumericPropertyRequest request
+        @RequestBody SingleNonNullableNumericPropertyRequest request
     ) {
         groupService.transferOwnership(groupId, request.getValue());
     }
@@ -89,5 +94,14 @@ public class GroupController {
         @RequestBody SetMemberRoleRequest request
     ) {
         groupService.changeMemberRole(groupId, memberId, request.getRole());
+    }
+
+    @GetMapping("/group/{groupId}/messages")
+    public GetGroupMessagesResponse getGroupMessages(@PathVariable long groupId) {
+        Set<GetGroupMessageResponse> notifications = groupMessageService.getByGroup(groupId).stream()
+            .map(message -> new GetGroupMessageResponse(message.id(), message.groupId(),
+                message.createdDate(), message.body()))
+            .collect(Collectors.toSet());
+        return new GetGroupMessagesResponse(notifications, notifications.size());
     }
 }

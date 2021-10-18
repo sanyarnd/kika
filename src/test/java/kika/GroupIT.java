@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import static kika.JsonUtils.numericList;
 import static kika.JsonUtils.writeJson;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -30,6 +31,20 @@ public class GroupIT extends AbstractIT {
         return mockMvc.perform(post("/account/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "kate"))))
+            .andReturn().getResponse().getContentAsString();
+    }
+
+    public String createList(String groupId) throws Exception {
+        return mockMvc.perform(post("/list/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("name", "list", "groupId", groupId))))
+            .andReturn().getResponse().getContentAsString();
+    }
+
+    public String createTask(String listId) throws Exception {
+        return mockMvc.perform(post("/task/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("name", "task", "listId", listId))))
             .andReturn().getResponse().getContentAsString();
     }
 
@@ -83,6 +98,8 @@ public class GroupIT extends AbstractIT {
                 .content(writeJson(Map.of("name", "group", "ownerId", ownerId))))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
+        String listId = createList(groupId);
+        String taskId = createTask(listId);
 
         mockMvc.perform(post(String.format("/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -99,6 +116,11 @@ public class GroupIT extends AbstractIT {
             .andExpect(status().isOk());
         mockMvc.perform(get(String.format("/account/%s", accountId)))
             .andExpect(status().isOk());
+
+        mockMvc.perform(get(String.format("/list/%s", listId)))
+            .andExpect(status().is5xxServerError());
+        mockMvc.perform(get(String.format("/task/%s", taskId)))
+            .andExpect(status().is5xxServerError());
     }
 
     @Test
@@ -160,5 +182,61 @@ public class GroupIT extends AbstractIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("role", AccountRole.Role.MEMBER.name()))))
             .andExpectAll(status().is5xxServerError());
+    }
+
+    @Test
+    @Order(5)
+    public void excludeMember() throws Exception {
+        String ownerId = registerAccount();
+        // Also in the group
+        String account1Id = registerAccount();
+        // Not in the group
+        String account2Id = registerAccount();
+
+        String groupId = mockMvc.perform(post("/group/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("name", "group", "ownerId", ownerId))))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("id", account1Id))))
+            .andExpect(status().isOk());
+
+        // List1, owner and account1 have access to it
+        String list1Id = createList(groupId);
+        mockMvc.perform(post(String.format("/list/%s/accounts", list1Id))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("{\"values\": %s}", numericList(account1Id, ownerId))))
+            .andExpect(status().isOk());
+
+        // List2, only account1 has access to it
+        String list2Id = createList(groupId);
+        mockMvc.perform(post(String.format("/list/%s/accounts", list2Id))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("{\"values\": %s}", numericList(account1Id))))
+            .andExpect(status().isOk());
+
+        // Trying to exclude from group an account that is not its member => error
+        mockMvc.perform(delete(String.format("/group/%s/member/%s", groupId, account2Id)))
+            .andExpect(status().is5xxServerError());
+
+        // Trying to exclude owner from group => error
+        mockMvc.perform(delete(String.format("/group/%s/member/%s", groupId, ownerId)))
+            .andExpect(status().is5xxServerError());
+
+        // Trying to exclude a regular member => success
+        mockMvc.perform(delete(String.format("/group/%s/member/%s", groupId, account1Id)))
+            .andExpect(status().isOk());
+
+        // Owner still has access to list1, but account1 does not anymore
+        mockMvc.perform(get(String.format("/list/%s/accounts", list1Id)))
+            .andExpectAll(jsonPath("$.count").value(1),
+                jsonPath(String.format("$.accounts[?(@.id == %s)]", ownerId)).exists(),
+                jsonPath(String.format("$.accounts[?(@.id == %s)]", account1Id)).doesNotExist());
+
+        // List2 gets deleted when account1 is excluded from the group
+        mockMvc.perform(get(String.format("/list/%s", list2Id)))
+            .andExpect(status().is5xxServerError());
     }
 }

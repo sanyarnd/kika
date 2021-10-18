@@ -1,14 +1,14 @@
 package kika.controller.response;
 
-import java.util.Collection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import java.util.Collection;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AccountTaskListsResponse {
-    private Collection<AccountTaskListResponse> lists;
+public class GetGroupMessagesResponse {
+    private Collection<GetGroupMessageResponse> messages;
     private long count;
 }

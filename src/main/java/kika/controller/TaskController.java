@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 import kika.controller.request.CreateTaskRequest;
 import kika.controller.request.MoveTaskRequest;
-import kika.controller.request.SetNumericPropertyListRequest;
-import kika.controller.request.SetSingleNonNullablePropertyRequest;
-import kika.controller.request.SetSingleNullableStringPropertyRequest;
+import kika.controller.request.NumericPropertyListRequest;
+import kika.controller.request.SingleNonNullablePropertyRequest;
+import kika.controller.request.SingleNullableStringPropertyRequest;
 import kika.controller.request.SetTaskStatusRequest;
 import kika.controller.response.GetTaskAssigneeResponse;
 import kika.controller.response.GetTaskAssigneesResponse;
@@ -35,12 +35,12 @@ public class TaskController {
     }
 
     @PostMapping("/task/{id}/rename")
-    public void renameTask(@PathVariable long id, @RequestBody SetSingleNonNullablePropertyRequest request) {
+    public void renameTask(@PathVariable long id, @RequestBody SingleNonNullablePropertyRequest request) {
         service.rename(id, request.getValue());
     }
 
     @PostMapping("/task/{id}/description")
-    public void setTaskDescription(@PathVariable long id, @RequestBody SetSingleNullableStringPropertyRequest request) {
+    public void setTaskDescription(@PathVariable long id, @RequestBody SingleNullableStringPropertyRequest request) {
         service.setDescription(id, request.getValue());
     }
 
@@ -62,7 +62,7 @@ public class TaskController {
     }
 
     @PostMapping("/task/{id}/assignees")
-    public void assign(@PathVariable long id, @RequestBody SetNumericPropertyListRequest request) {
+    public void assign(@PathVariable long id, @RequestBody NumericPropertyListRequest request) {
         service.assign(id, request.getValues());
     }
 
@@ -75,7 +75,7 @@ public class TaskController {
     }
 
     @PostMapping("/task/{id}/subscribers")
-    public void subscribe(@PathVariable long id, @RequestBody SetNumericPropertyListRequest request) {
+    public void subscribe(@PathVariable long id, @RequestBody NumericPropertyListRequest request) {
         service.subscribe(id, request.getValues());
     }
 

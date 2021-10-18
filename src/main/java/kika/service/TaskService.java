@@ -28,16 +28,31 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final TaskListRepository taskListRepository;
     private final AccountRepository accountRepository;
-    private final AccountTaskAssigneeRepository accountTaskAssigneeRepository;
-    private final AccountTaskSubscriberRepository accountTaskSubscriberRepository;
+    private final AccountTaskAssigneeRepository assigneeRepository;
+    private final AccountTaskSubscriberRepository subscriberRepository;
 
     private final TaskListService taskListService;
+
+    private void checkAccountAccess(Set<Account> accountsWithAccess, Account account, Task task) {
+        if (!accountsWithAccess.contains(account)) {
+            throw new IllegalArgumentException(
+                String.format("Account id=%d has no access to the task list id=%d", account.safeId(),
+                    task.getList().safeId()));
+        }
+    }
+
+    private void checkTaskListAndParent(long listId, @NotNull Task parent) {
+        if (parent.getList().safeId() != listId) {
+            throw new IllegalArgumentException(String.format("Parent list id (%d) does not match child list id (%d)",
+                parent.safeId(), listId));
+        }
+    }
 
     @Transactional
     public long create(@NotNull String name, @Nullable String description, long listId, Long parentId) {
         Task parent = parentId == null ? null : taskRepository.getById(parentId);
-        if(parent != null && parent.getList().safeId() != listId) {
-            throw new IllegalArgumentException();
+        if (parent != null) {
+            checkTaskListAndParent(listId, parent);
         }
         return taskRepository.save(new Task(name, description, parent, taskListRepository.getById(listId))).safeId();
     }
@@ -76,10 +91,7 @@ public class TaskService {
         }
         if (parentId != null) {
             Task parent = taskRepository.getById(parentId);
-            if(parent.getList().safeId() != task.getList().safeId()) {
-                throw new IllegalArgumentException(
-                        String.format("parent list id=%d, child list id=%d", parent.getList().safeId(), task.getList().safeId()));
-            }
+            checkTaskListAndParent(listId != null ? listId : task.getList().safeId(), parent);
             task.setParent(parent);
         }
     }
@@ -87,37 +99,30 @@ public class TaskService {
     @Transactional
     public void assign(long taskId, @NotNull Collection<Long> assigneeIds) {
         Task task = taskRepository.getById(taskId);
-        task.getAssignees().clear();
+        assigneeRepository.deleteAll(task.getAssignees());
         Set<Account> accountsWithAccess = new HashSet<>(taskListService.getAccountsWithAccess(task.getList().safeId()));
-        assigneeIds.stream()
-                .map(accountRepository::getById)
-                .forEach(account -> {
-                    if(!accountsWithAccess.contains(account)) {
-                        throw new IllegalArgumentException();
-                    }
-                    accountTaskAssigneeRepository.save(new AccountTaskAssignee(task, account));
-                });
+        for (Account account : accountRepository.findAllById(assigneeIds)) {
+            checkAccountAccess(accountsWithAccess, account, task);
+            assigneeRepository.save(new AccountTaskAssignee(task, account));
+            subscriberRepository.save(new AccountTaskSubscriber(task, account));
+        }
     }
 
     @Transactional
     public Collection<Account> getAssignees(long taskId) {
         return taskRepository.getById(taskId).getAssignees().stream()
-                .map(AccountTaskAssignee::getAccount).collect(Collectors.toSet());
+            .map(AccountTaskAssignee::getAccount).collect(Collectors.toSet());
     }
 
     @Transactional
     public void subscribe(long taskId, @NotNull Collection<Long> subscriberIds) {
         Task task = taskRepository.getById(taskId);
-        task.getSubscribers().clear();
+        subscriberRepository.deleteAll(task.getSubscribers());
         Set<Account> accountsWithAccess = new HashSet<>(taskListService.getAccountsWithAccess(task.getList().safeId()));
-        subscriberIds.stream()
-                .map(accountRepository::getById)
-                .forEach(account -> {
-                    if(!accountsWithAccess.contains(account)) {
-                        throw new IllegalArgumentException();
-                    }
-                    accountTaskSubscriberRepository.save(new AccountTaskSubscriber(task, account));
-                });
+        accountRepository.findAllById(subscriberIds).forEach(account -> {
+            checkAccountAccess(accountsWithAccess, account, task);
+            subscriberRepository.save(new AccountTaskSubscriber(task, account));
+        });
     }
 
     @Transactional

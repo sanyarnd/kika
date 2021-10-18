@@ -2,12 +2,16 @@ package kika.service;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import kika.domain.Account;
 import kika.domain.AccountRole;
 import kika.domain.Group;
 import kika.domain.TaskList;
 import kika.repository.AccountRepository;
 import kika.repository.AccountRoleRepository;
+import kika.repository.AccountSpecialAccessRepository;
 import kika.repository.GroupRepository;
 import kika.repository.TaskListRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +26,7 @@ public class GroupService {
     private final AccountRepository accountRepository;
     private final AccountRoleRepository accountRoleRepository;
     private final TaskListRepository taskListRepository;
+    private final AccountSpecialAccessRepository accountSpecialAccessRepository;
 
     @Transactional
     public long create(@NotNull String name, long ownerId) {
@@ -88,16 +93,37 @@ public class GroupService {
     }
 
     @Transactional
-    public boolean removeMember(long groupId, long memberId) {
+    public void removeMember(long groupId, long memberId) {
         Group group = groupRepository.getById(groupId);
-        if (group.getOwner().getId() == memberId) {
+        if (group.getOwner().safeId() == memberId) {
             throw new IllegalArgumentException("Can't remove owner");
         }
-        if(group.getMembers().removeIf(accountRole -> accountRole.getAccount().safeId() == memberId)) {
-            group.getTaskLists().forEach(list -> list.revokeSpecialAccessRecursively(memberId));
-            return true;
+
+        // Check if user is a member,
+        // remove user from a group
+        // delete lists that only member can access, remove member from other lists in the group
+
+        Collection<AccountRole> accountRoles = groupRepository.getAccountGroups(memberId);
+        Set<AccountRole> groupRoles = new HashSet<>(group.getMembers());
+        groupRoles.retainAll(accountRoles);
+        if (groupRoles.isEmpty()) {
+            throw new IllegalArgumentException("Account is not a member of the group");
         }
-        return false;
+        group.getMembers().removeAll(groupRoles);
+
+        Collection<TaskList> listsByGroupId = taskListRepository.getTaskListsByGroupId(groupId);
+        List<TaskList> taskLists = listsByGroupId.stream()
+            .filter(list -> list.getSpecialAccess().stream().anyMatch(accSpAcc -> accSpAcc.getAccount().safeId() == memberId))
+            .collect(Collectors.toList());
+
+        for (TaskList list : taskLists) {
+            if (list.getSpecialAccess().size() == 1) {
+                taskListRepository.delete(list);
+            } else {
+                list.getSpecialAccess().removeIf(asa -> asa.getAccount().safeId() == memberId);
+            }
+        }
+
     }
 
     @Transactional

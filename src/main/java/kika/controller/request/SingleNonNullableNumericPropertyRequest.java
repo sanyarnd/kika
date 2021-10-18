@@ -1,14 +1,14 @@
 package kika.controller.request;
 
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.Nullable;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SetSingleNullableNumericPropertyRequest {
-    @Nullable
-    private Long value;
+public class SingleNonNullableNumericPropertyRequest {
+    @NotNull
+    private long value;
 }

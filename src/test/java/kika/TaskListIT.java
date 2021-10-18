@@ -196,6 +196,20 @@ public class TaskListIT extends AbstractIT {
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account1Id)).exists(),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
 
+        // Check for access from account side
+        mockMvc.perform(get(String.format("/account/%s/lists", ownerId)))
+            .andExpectAll(jsonPath("$.count").value(2),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).exists());
+        mockMvc.perform(get(String.format("/account/%s/lists", account1Id)))
+            .andExpectAll(jsonPath("$.count").value(2),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).exists());
+        mockMvc.perform(get(String.format("/account/%s/lists", account2Id)))
+            .andExpectAll(jsonPath("$.count").value(2),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).exists());
+
         // Add a task to each list, check
         String task1Id = createTask(parentListId);
         String task2Id = createTask(childListId);
@@ -206,6 +220,24 @@ public class TaskListIT extends AbstractIT {
             .andExpect(jsonPath("$.listId").value(childListId));
 
         // Restrict parent list's access to account1 and account2, check
+        mockMvc.perform(post(String.format("/list/%s/accounts", parentListId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("{\"values\": %s}", numericList(account1Id, account2Id))))
+            .andExpect(status().isOk());
+
+        // From account side
+        mockMvc.perform(get(String.format("/account/%s/lists", ownerId)))
+            .andExpect(jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).doesNotExist());
+        mockMvc.perform(get(String.format("/account/%s/lists", account1Id)))
+            .andExpectAll(jsonPath("$.count").value(2),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).exists());
+        mockMvc.perform(get(String.format("/account/%s/lists", account2Id)))
+            .andExpectAll(jsonPath("$.count").value(2),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).exists());
+
+        // Check that adding the same accounts does not cause errors
         mockMvc.perform(post(String.format("/list/%s/accounts", parentListId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("{\"values\": %s}", numericList(account1Id, account2Id))))
@@ -222,6 +254,11 @@ public class TaskListIT extends AbstractIT {
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account1Id)).exists(),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
 
+        // From account side
+        mockMvc.perform(get(String.format("/account/%s/lists", ownerId)))
+            .andExpectAll(jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).doesNotExist(),
+                jsonPath("$.count").value(0));
+
         // Restrict child list's access to account2, check
         mockMvc.perform(post(String.format("/list/%s/accounts", childListId))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -232,11 +269,24 @@ public class TaskListIT extends AbstractIT {
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
 
+        // From account side
+        mockMvc.perform(get(String.format("/account/%s/lists", account1Id)))
+            .andExpect(jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).doesNotExist());
+        mockMvc.perform(get(String.format("/account/%s/lists", account2Id)))
+            .andExpectAll(jsonPath("$.count").value(2),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).exists());
+
         // Check that account1 still has access to parent list
         mockMvc.perform(get(String.format("/list/%s/accounts", parentListId)))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account1Id)).exists(),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
+
+        // From account side
+        mockMvc.perform(get(String.format("/account/%s/lists", account1Id)))
+            .andExpectAll(jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
+                jsonPath("$.count").value(1));
 
         // Delete account2 and check that child list also gets deleted along with its task
         // (because only account2 has access to it)
@@ -263,9 +313,13 @@ public class TaskListIT extends AbstractIT {
         mockMvc.perform(get(String.format("/task/%s", task1Id)))
             .andExpect(status().is5xxServerError());
 
-        // Account1 has no associated groups
+        // Account1 has no associated groups or lists
         mockMvc.perform(get(String.format("/account/%s/groups", account1Id)))
             .andExpectAll(jsonPath("$.count").value(0),
                 jsonPath("$.groups").isEmpty());
+        mockMvc.perform(get(String.format("/account/%s/lists", account1Id)))
+            .andExpectAll(jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).doesNotExist(),
+                jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).doesNotExist(),
+                jsonPath("$.count").value(0));
     }
 }

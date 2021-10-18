@@ -318,7 +318,7 @@ public class TaskIT extends AbstractIT {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     public void taskAssignees() throws Exception {
         String ownerId = createAccount();
         String account1Id = createAccount();
@@ -364,6 +364,7 @@ public class TaskIT extends AbstractIT {
                 .content("{\"values\": []}"))
             .andExpect(status().isOk());
 
+        // Assigning account1 and account2 (both automatically get subscribed)
         mockMvc.perform(post(String.format("/task/%s/assignees", taskId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("{\"values\": %s}", numericList(account1Id, account2Id))))
@@ -371,9 +372,34 @@ public class TaskIT extends AbstractIT {
 
         mockMvc.perform(get(String.format("/task/%s/assignees", taskId)))
             .andExpectAll(jsonPath("$.count").value(2),
-                jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).value("kate"),
-                jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).value("kate"));
+                jsonPath(String.format("$.values[?(@.id == %s)]", account1Id)).exists(),
+                jsonPath(String.format("$.values[?(@.id == %s)]", account2Id)).exists());
+        mockMvc.perform(get(String.format("/task/%s/subscribers", taskId)))
+            .andExpectAll(jsonPath("$.count").value(2),
+                jsonPath(String.format("$.values[?(@.id == %s)]", account1Id)).exists(),
+                jsonPath(String.format("$.values[?(@.id == %s)]", account2Id)).exists());
 
+        // Un-assigning account1, checking that subscription remains
+        mockMvc.perform(post(String.format("/task/%s/assignees", taskId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("{\"values\": %s}", numericList(account2Id))))
+            .andExpect(status().isOk());
+        mockMvc.perform(get(String.format("/task/%s/assignees", taskId)))
+            .andExpectAll(jsonPath("$.count").value(1),
+                jsonPath(String.format("$.values[?(@.id == %s)]", account1Id)).doesNotExist(),
+                jsonPath(String.format("$.values[?(@.id == %s)]", account2Id)).exists());
+        mockMvc.perform(get(String.format("/task/%s/subscribers", taskId)))
+            .andExpectAll(jsonPath("$.count").value(2),
+                jsonPath(String.format("$.values[?(@.id == %s)]", account1Id)).exists(),
+                jsonPath(String.format("$.values[?(@.id == %s)]", account2Id)).exists());
+
+        // Assigning account1 and account2 again
+        mockMvc.perform(post(String.format("/task/%s/assignees", taskId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("{\"values\": %s}", numericList(account1Id, account2Id))))
+            .andExpect(status().isOk());
+
+        // Deleting account1 and checking that it's not assigned or subscribed anymore
         mockMvc.perform(delete(String.format("/account/%s", account1Id)))
             .andExpect(status().isOk());
 
@@ -382,12 +408,14 @@ public class TaskIT extends AbstractIT {
 
         mockMvc.perform(get(String.format("/task/%s/assignees", taskId)))
             .andExpectAll(jsonPath("$.count").value(1),
-                jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).value("kate"));
+                jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).doesNotExist(),
+                jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).exists());
 
         mockMvc.perform(get(String.format("/account/%s/tasks/assigned", account2Id)))
             .andExpectAll(jsonPath(String.format("$.tasks[?(@.id == %s)]", taskId)).exists(),
                 jsonPath("$.count").value(1));
 
+        // Deleting task and checking that all assignments and subscriptions also get deleted
         mockMvc.perform(delete(String.format("/task/%s", taskId)))
             .andExpectAll(status().isOk());
 
@@ -396,10 +424,12 @@ public class TaskIT extends AbstractIT {
 
         mockMvc.perform(get(String.format("/account/%s/tasks/assigned", account2Id)))
             .andExpect(jsonPath("$.tasks").isEmpty());
+        mockMvc.perform(get(String.format("/account/%s/tasks/subscribed", account2Id)))
+            .andExpect(jsonPath("$.tasks").isEmpty());
     }
 
     @Test
-    @Order(8)
+    @Order(7)
     public void taskSubscribers() throws Exception {
         String ownerId = createAccount();
         String account1Id = createAccount();
@@ -445,6 +475,7 @@ public class TaskIT extends AbstractIT {
                 .content("{\"values\": []}"))
             .andExpect(status().isOk());
 
+        // Subscribing from account1 and account2, checking
         mockMvc.perform(post(String.format("/task/%s/subscribers", taskId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("{\"values\": %s}", numericList(account1Id, account2Id))))
@@ -452,9 +483,31 @@ public class TaskIT extends AbstractIT {
 
         mockMvc.perform(get(String.format("/task/%s/subscribers", taskId)))
             .andExpectAll(jsonPath("$.count").value(2),
-                jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).value("kate"),
-                jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).value("kate"));
+                jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).exists(),
+                jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).exists());
 
+        // Unsubscribing from account1, checking
+        mockMvc.perform(post(String.format("/task/%s/subscribers", taskId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("{\"values\": %s}", numericList(account2Id))))
+            .andExpect(status().isOk());
+        mockMvc.perform(get(String.format("/task/%s/subscribers", taskId)))
+            .andExpectAll(jsonPath("$.count").value(1),
+                jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).doesNotExist(),
+                jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).exists());
+
+        // Subscribing from account1 and account2 again
+        mockMvc.perform(post(String.format("/task/%s/subscribers", taskId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("{\"values\": %s}", numericList(account1Id, account2Id))))
+            .andExpect(status().isOk());
+        mockMvc.perform(get(String.format("/task/%s/subscribers", taskId)))
+            .andExpectAll(jsonPath("$.count").value(2),
+                jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).exists(),
+                jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).exists());
+
+
+        // Deleting account1, checking that it has been removed from the subscribers list
         mockMvc.perform(delete(String.format("/account/%s", account1Id)))
             .andExpect(status().isOk());
 
@@ -463,12 +516,14 @@ public class TaskIT extends AbstractIT {
 
         mockMvc.perform(get(String.format("/task/%s/subscribers", taskId)))
             .andExpectAll(jsonPath("$.count").value(1),
-                jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).value("kate"));
+                jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).doesNotExist(),
+                jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).exists());
 
         mockMvc.perform(get(String.format("/account/%s/tasks/subscribed", account2Id)))
             .andExpectAll(jsonPath(String.format("$.tasks[?(@.id == %s)]", taskId)).exists(),
                 jsonPath("$.count").value(1));
 
+        // Deleting task and checking that all subscriptions have been removed as well
         mockMvc.perform(delete(String.format("/task/%s", taskId)))
             .andExpectAll(status().isOk());
 

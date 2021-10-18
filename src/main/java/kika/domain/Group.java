@@ -31,7 +31,10 @@ public class Group extends AutoPersistableAuditable {
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AccountRole> members;
 
-    @OneToMany(mappedBy = "group", orphanRemoval = true)
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<GroupMessage> messages;
+
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TaskList> taskLists;
 
     public Group(String name, Account owner) {

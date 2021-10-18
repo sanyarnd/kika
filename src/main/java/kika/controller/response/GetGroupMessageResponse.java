@@ -1,6 +1,6 @@
 package kika.controller.response;
 
-import java.util.Collection;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AccountTaskListsResponse {
-    private Collection<AccountTaskListResponse> lists;
-    private long count;
+public class GetGroupMessageResponse {
+    private long id;
+    private long groupId;
+    private Instant createdDate;
+    private String body;
 }

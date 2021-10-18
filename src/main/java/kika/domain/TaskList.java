@@ -30,23 +30,16 @@ public class TaskList extends AutoPersistableAuditable {
     private TaskList parent;
 
     @ManyToOne
+    @OnDelete(action = OnDeleteAction.NO_ACTION)
     private Group group;
 
-    @JoinColumn(name = "parent_id", referencedColumnName = "id")
-    @OneToMany(orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TaskList> children;
 
-    @OneToMany(mappedBy = "list",
-            cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY,
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "list", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Task> tasks;
 
-    @OneToMany(orphanRemoval = true,
-            cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY,
-            mappedBy = "taskList")
-//    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OneToMany(mappedBy = "taskList", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AccountSpecialAccess> specialAccess;
 
     public Long getParentId() {

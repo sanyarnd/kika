@@ -40,20 +40,19 @@ public class Task extends AutoPersistableAuditable {
     @OnDelete(action = OnDeleteAction.NO_ACTION)
     private Task parent;
 
-    @JoinColumn(name = "parent_id", referencedColumnName = "id")
-//    @Where(clause = "parent_id is not null")
-    @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Task> children;
 
     @Setter
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "list_id")
+    @OnDelete(action = OnDeleteAction.NO_ACTION)
     private TaskList list;
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "task", orphanRemoval = true)
     private Set<AccountTaskAssignee> assignees;
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "task", orphanRemoval = true)
     private Set<AccountTaskSubscriber> subscribers;
 
     public Task(String name, String description, Task parent, TaskList list) {
@@ -64,9 +63,7 @@ public class Task extends AutoPersistableAuditable {
         this.status = Status.NOT_COMPLETED;
     }
 
-    /**
-     * @return parent id or null if parent is null
-     */
+    @Nullable
     public Long getParentId() {
         return parent == null ? null : parent.safeId();
     }
