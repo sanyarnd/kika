@@ -17,6 +17,21 @@
                 <constraints nullable="false"/>
             </column>
 
+            <column name="provider" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="provider_id" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="refresh_token" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="refresh_token_exp" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="created_by" type="varchar(255)"/>
             <column name="created_date" type="timestamp">
                 <constraints nullable="false"/>
@@ -26,6 +41,7 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+        <addUniqueConstraint tableName="account" columnNames="provider,provider_id"/>
 
         <createTable tableName="group">
             <column name="id" type="bigint" autoIncrement="true">
