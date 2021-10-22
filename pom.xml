@@ -20,13 +20,15 @@
         <jetbrains-annotations.version>22.0.0</jetbrains-annotations.version>
 
         <zalando-problem-spring.version>0.27.0</zalando-problem-spring.version>
+        <jjwt.version>0.11.2</jjwt.version>
         <springdoc-openapi.version>1.5.11</springdoc-openapi.version>
+
         <testcontainers.version>1.16.0</testcontainers.version>
         <archunit-junit5.version>0.21.0</archunit-junit5.version>
 
         <checkstyle.version>9.0</checkstyle.version>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
-        <spotbugs.version>4.4.1</spotbugs.version>
+        <spotbugs.version>4.4.2</spotbugs.version>
         <spotbugs-maven-plugin.version>4.4.1</spotbugs-maven-plugin.version>
         <spotbugs-contrib.version>7.4.7</spotbugs-contrib.version>
         <findsecbugs.version>LATEST</findsecbugs.version>
@@ -90,6 +92,25 @@
             <groupId>org.zalando</groupId>
             <artifactId>problem-spring-web</artifactId>
             <version>${zalando-problem-spring.version}</version>
+        </dependency>
+
+        <!-- JWT -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Springdoc OpenAPI -->
