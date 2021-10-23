@@ -22,6 +22,8 @@ import kika.security.jwt.encode.JwtTokenService;
 import kika.security.jwt.encode.RefreshTokenGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
 @Configuration
@@ -93,9 +95,10 @@ public class JwtConfiguration {
     @Bean
     JwtTokenAuthenticationFilter jwtTokenAuthenticationFilter(
         JwtTokenAuthenticationConverter jwtTokenAuthenticationConverter,
-        AuthenticationEntryPoint authenticationEntryPoint
+        AuthenticationEntryPoint authenticationEntryPoint,
+        @Lazy AuthenticationManager authenticationManager // circular dependency
     ) {
         return new JwtTokenAuthenticationFilter(
-            jwtTokenAuthenticationConverter, authenticationEntryPoint);
+            jwtTokenAuthenticationConverter, authenticationEntryPoint, authenticationManager);
     }
 }

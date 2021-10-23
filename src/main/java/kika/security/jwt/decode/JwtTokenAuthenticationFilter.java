@@ -24,8 +24,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtTokenAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenAuthenticationConverter authenticationConverter;
     private final AuthenticationEntryPoint authenticationEntryPoint;
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
     @Override
     public void doFilterInternal(

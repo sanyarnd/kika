@@ -1,26 +1,19 @@
 package kika.service;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-import kika.domain.Account;
-import kika.domain.AccountTaskAssignee;
-import kika.domain.AccountTaskSubscriber;
-import kika.domain.AutoPersistable;
-import kika.domain.Task;
-import kika.domain.TaskList;
-import kika.repository.AccountRepository;
-import kika.repository.AccountTaskAssigneeRepository;
-import kika.repository.AccountTaskSubscriberRepository;
-import kika.repository.TaskListRepository;
-import kika.repository.TaskRepository;
+import kika.domain.*;
+import kika.repository.*;
+import kika.security.principal.KikaPrincipal;
 import kika.service.dto.TaskDto;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,41 +41,76 @@ public class TaskService {
         }
     }
 
+    private void checkGroupMemberPermission(KikaPrincipal principal, Group group) {
+        if (group.getMembers().stream()
+            .noneMatch(member -> member.getAccount().safeId() == principal.accountId() &&
+                member.getRole() != AccountRole.Role.RESTRICTED)) {
+            throw new BadCredentialsException("Not enough group permissons");
+        }
+    }
+
+    private void checkListAccess(KikaPrincipal principal, TaskList list) {
+        if (!list.accountHasAccess(principal.accountId())) {
+            throw new BadCredentialsException("No access");
+        }
+    }
+
+    private void runAccessChecks(KikaPrincipal principal, TaskList list) {
+        checkGroupMemberPermission(principal, list.getGroup());
+        checkListAccess(principal, list);
+    }
+
     @Transactional
-    public long create(@NotNull String name, @Nullable String description, long listId, Long parentId) {
+    public long create(
+        @NotNull String name,
+        @Nullable String description,
+        long listId,
+        Long parentId,
+        KikaPrincipal principal
+    ) {
+        TaskList list = taskListRepository.getById(listId);
+        runAccessChecks(principal, list);
         Task parent = parentId == null ? null : taskRepository.getById(parentId);
         if (parent != null) {
             checkTaskListAndParent(listId, parent);
         }
-        return taskRepository.save(new Task(name, description, parent, taskListRepository.getById(listId))).safeId();
+        return taskRepository.save(new Task(name, description, parent, list)).safeId();
     }
 
     @Transactional
-    public void rename(long id, @NotNull String name) {
-        taskRepository.getById(id).setName(name);
-    }
-
-    @Transactional
-    public void setDescription(long id, @Nullable String description) {
-        taskRepository.getById(id).setDescription(description);
-    }
-
-    @Transactional
-    public TaskDto get(long id) {
+    public void rename(long id, @NotNull String name, KikaPrincipal principal) {
         Task task = taskRepository.getById(id);
+        runAccessChecks(principal, task.getList());
+        task.setName(name);
+    }
+
+    @Transactional
+    public void setDescription(long id, @Nullable String description, KikaPrincipal principal) {
+        Task task = taskRepository.getById(id);
+        runAccessChecks(principal, task.getList());
+        task.setDescription(description);
+    }
+
+    @Transactional
+    public TaskDto get(long id, KikaPrincipal principal) {
+        Task task = taskRepository.getById(id);
+        checkListAccess(principal, task.getList());
         return new TaskDto(task.safeId(), task.getName(), task.getDescription(), task.getStatus(),
             task.getParentId(), task.getList().safeId(),
             task.getChildren().stream().map(AutoPersistable::safeId).collect(Collectors.toSet()));
     }
 
     @Transactional
-    public void delete(long id) {
-        taskRepository.deleteById(id);
+    public void delete(long id, KikaPrincipal principal) {
+        Task task = taskRepository.getById(id);
+        runAccessChecks(principal, task.getList());
+        taskRepository.delete(task);
     }
 
     @Transactional
-    public void move(long taskId, @Nullable Long listId, @Nullable Long parentId) {
+    public void move(long taskId, @Nullable Long listId, @Nullable Long parentId, KikaPrincipal principal) {
         Task task = taskRepository.getById(taskId);
+        runAccessChecks(principal, task.getList());
         if (listId != null && task.getList().safeId() != listId) {
             TaskList list = taskListRepository.getById(listId);
             task.setParent(null);
@@ -97,43 +125,55 @@ public class TaskService {
     }
 
     @Transactional
-    public void assign(long taskId, @NotNull Collection<Long> assigneeIds) {
+    public void assign(long taskId, KikaPrincipal principal) {
         Task task = taskRepository.getById(taskId);
-        assigneeRepository.deleteAll(task.getAssignees());
-        Set<Account> accountsWithAccess = new HashSet<>(taskListService.getAccountsWithAccess(task.getList().safeId()));
-        for (Account account : accountRepository.findAllById(assigneeIds)) {
-            checkAccountAccess(accountsWithAccess, account, task);
-            assigneeRepository.save(new AccountTaskAssignee(task, account));
-            subscriberRepository.save(new AccountTaskSubscriber(task, account));
-        }
+        checkListAccess(principal, task.getList());
+        assigneeRepository.save(new AccountTaskAssignee(task, accountRepository.getById(principal.accountId())));
+        subscriberRepository.save(new AccountTaskSubscriber(task, accountRepository.getById(principal.accountId())));
     }
 
     @Transactional
-    public Collection<Account> getAssignees(long taskId) {
-        return taskRepository.getById(taskId).getAssignees().stream()
+    public void retract(long taskId, KikaPrincipal principal) {
+        Task task = taskRepository.getById(taskId);
+        checkListAccess(principal, task.getList());
+        assigneeRepository.delete(assigneeRepository.getAssigneeByIds(principal.accountId(), taskId));
+    }
+
+    @Transactional
+    public Collection<Account> getAssignees(long taskId, KikaPrincipal principal) {
+        Task task = taskRepository.getById(taskId);
+        checkListAccess(principal, task.getList());
+        return task.getAssignees().stream()
             .map(AccountTaskAssignee::getAccount).collect(Collectors.toSet());
     }
 
     @Transactional
-    public void subscribe(long taskId, @NotNull Collection<Long> subscriberIds) {
+    public void subscribe(long taskId, KikaPrincipal principal) {
         Task task = taskRepository.getById(taskId);
-        subscriberRepository.deleteAll(task.getSubscribers());
-        Set<Account> accountsWithAccess = new HashSet<>(taskListService.getAccountsWithAccess(task.getList().safeId()));
-        accountRepository.findAllById(subscriberIds).forEach(account -> {
-            checkAccountAccess(accountsWithAccess, account, task);
-            subscriberRepository.save(new AccountTaskSubscriber(task, account));
-        });
+        checkListAccess(principal, task.getList());
+        subscriberRepository.save(new AccountTaskSubscriber(task, accountRepository.getById(principal.accountId())));
     }
 
     @Transactional
-    public Collection<Account> getSubscribers(long taskId) {
-        return taskRepository.getById(taskId).getSubscribers().stream()
+    public void unsubscribe(long taskId, KikaPrincipal principal) {
+        Task task = taskRepository.getById(taskId);
+        checkListAccess(principal, task.getList());
+        subscriberRepository.delete(subscriberRepository.getSubscriberByIds(principal.accountId(), taskId));
+    }
+
+    @Transactional
+    public Collection<Account> getSubscribers(long taskId, KikaPrincipal principal) {
+        Task task = taskRepository.getById(taskId);
+        checkListAccess(principal, task.getList());
+        return task.getSubscribers().stream()
             .map(AccountTaskSubscriber::getAccount)
             .collect(Collectors.toSet());
     }
 
     @Transactional
-    public void setStatus(long id, @NotNull Task.Status status) {
-        taskRepository.getById(id).setStatus(status);
+    public void setStatus(long id, @NotNull Task.Status status, KikaPrincipal principal) {
+        Task task = taskRepository.getById(id);
+        checkListAccess(principal, task.getList());
+        task.setStatus(status);
     }
 }

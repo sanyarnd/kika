@@ -15,6 +15,4 @@ import java.util.List;
 public interface TaskListRepository extends JpaRepository<TaskList, Long> {
     @Query("select TL from TaskList TL where TL.group.id=:groupId")
     List<TaskList> getTaskListsByGroupId(@Param("groupId") long groupId);
-
-//    List<TaskList> findByGroupAndAccount(long groupId, long accountId);
 }

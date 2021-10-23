@@ -46,9 +46,17 @@ public class TaskList extends AutoPersistableAuditable {
         return parent == null ? null : parent.safeId();
     }
 
-    public void revokeSpecialAccessRecursively(long id) {
-        if (specialAccess.removeIf(accSpAcc -> accSpAcc.getAccount().safeId() == id)) {
-            children.forEach(child -> child.revokeSpecialAccessRecursively(id));
+    public boolean accountHasAccess(long accountId) {
+        if (this.getSpecialAccess().isEmpty()) {
+            if (this.getParent() != null) {
+                return this.getParent().accountHasAccess(accountId);
+            } else {
+                return this.getGroup().getMembers().stream()
+                    .anyMatch(accountRole -> accountRole.getAccount().safeId() == accountId);
+            }
+        } else {
+            return this.getSpecialAccess().stream()
+                .anyMatch(accountSpecialAccess -> accountSpecialAccess.getAccount().safeId() == accountId);
         }
     }
 

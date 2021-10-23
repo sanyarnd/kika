@@ -12,10 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface AccountSpecialAccessRepository
     extends JpaRepository<AccountSpecialAccess, AccountSpecialAccess.PK> {
-    @Query("select ASA from AccountSpecialAccess ASA where ASA.taskList.id=:taskListId")
+    @Query("select ASA from AccountSpecialAccess ASA where ASA.id.tasklistId=:taskListId")
     List<AccountSpecialAccess> getSpecialAccessAccountsByTaskListId(@Param("taskListId") long taskListId);
 
     @Query("select ASA from AccountSpecialAccess ASA "
-        + "where ASA.account.id=:accountId and ASA.taskList.specialAccess.size=1")
+        + "where ASA.id.accountId=:accountId and ASA.taskList.specialAccess.size=1")
     List<AccountSpecialAccess> getListsWithOneSpecialAccessAccountById(@Param("accountId") long accountId);
 }

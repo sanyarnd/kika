@@ -16,8 +16,10 @@ import kika.repository.AccountRepository;
 import kika.repository.AccountSpecialAccessRepository;
 import kika.repository.GroupRepository;
 import kika.repository.TaskListRepository;
+import kika.security.principal.KikaPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,35 +33,40 @@ public class AccountService {
 
     private final TaskListService taskListService;
 
-    public long register(@NotNull String name) {
-        return accountRepository.save(new Account(name)).safeId();
+    private void checkAccess(KikaPrincipal principal, long accountId) {
+        if(principal.accountId() != accountId) {
+            throw new BadCredentialsException("Access denied");
+        }
     }
 
-    public Collection<AccountRole> getGroups(long id) {
-        return groupRepository.getAccountGroups(id);
+//    public long register(@NotNull String name) {
+//        return accountRepository.save(new Account(name)).safeId();
+//    }
+
+    public Collection<AccountRole> getGroups(long accountId, KikaPrincipal principal) {
+        checkAccess(principal, accountId);
+        return groupRepository.getAccountGroups(accountId);
     }
 
     @Transactional
-    public List<TaskList> getTaskLists(long id) {
-        Set<Long> accountGroupIds = groupRepository.getAccountGroups(id).stream()
-            .map(accountRole -> accountRole.getGroup().safeId())
-            .collect(Collectors.toUnmodifiableSet());
-        return accountGroupIds.stream()
-            .flatMap(groupId -> taskListRepository.getTaskListsByGroupId(groupId).stream())
-            .filter(list -> taskListService.getAccountsWithAccess(list.safeId())
-                .stream()
-                .map(AutoPersistable::safeId)
-                .collect(Collectors.toUnmodifiableSet()).contains(id))
+    public List<TaskList> getTaskLists(long accountId, long groupId, KikaPrincipal principal) {
+        checkAccess(principal, accountId);
+        List<TaskList> lists = taskListRepository.getTaskListsByGroupId(groupId);
+
+        return lists.stream()
+            .filter(list -> list.accountHasAccess(accountId))
             .collect(Collectors.toList());
     }
 
     @Transactional
-    public void rename(long id, @NotNull String name) {
-        accountRepository.getById(id).setName(name);
+    public void rename(long accountId, @NotNull String name, KikaPrincipal principal) {
+        checkAccess(principal, accountId);
+        accountRepository.getById(accountId).setName(name);
     }
 
     @Transactional
-    public boolean delete(long accountId) {
+    public boolean delete(long accountId, KikaPrincipal principal) {
+        checkAccess(principal, accountId);
         List<AccountSpecialAccess> listsWithOneSpecialAccessAccountById =
             accountSpecialAccessRepository.getListsWithOneSpecialAccessAccountById(accountId);
         Account account = accountRepository.getById(accountId);
@@ -75,20 +82,23 @@ public class AccountService {
         return true;
     }
 
-    public Account get(long accountId) {
+    public Account get(long accountId, KikaPrincipal principal) {
+        checkAccess(principal, accountId);
         return accountRepository.findById(accountId).orElse(null);
     }
 
     @Transactional
-    public Set<Task> assignedTasks(long id) {
-        return accountRepository.getById(id).getAssignedTasks().stream()
+    public Set<Task> assignedTasks(long accountId, KikaPrincipal principal) {
+        checkAccess(principal, accountId);
+        return accountRepository.getById(accountId).getAssignedTasks().stream()
             .map(AccountTaskAssignee::getTask)
             .collect(Collectors.toSet());
     }
 
     @Transactional
-    public Set<Task> subscribedTasks(long id) {
-        return accountRepository.getById(id).getSubscribedTasks().stream()
+    public Set<Task> subscribedTasks(long accountId, KikaPrincipal principal) {
+        checkAccess(principal, accountId);
+        return accountRepository.getById(accountId).getSubscribedTasks().stream()
             .map(AccountTaskSubscriber::getTask)
             .collect(Collectors.toSet());
     }

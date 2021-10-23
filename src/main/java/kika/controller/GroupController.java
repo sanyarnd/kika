@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import kika.controller.request.AddGroupMemberRequest;
-import kika.controller.request.CreateGroupRequest;
 import kika.controller.request.SetMemberRoleRequest;
 import kika.controller.request.SingleNonNullableNumericPropertyRequest;
 import kika.controller.request.SingleNonNullablePropertyRequest;
@@ -16,9 +15,11 @@ import kika.controller.response.GroupMembersResponse;
 import kika.controller.response.GroupTaskListResponse;
 import kika.controller.response.GroupTaskListsResponse;
 import kika.domain.Group;
+import kika.security.principal.KikaPrincipal;
 import kika.service.GroupMessageService;
 import kika.service.GroupService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,45 +34,57 @@ public class GroupController {
     private final GroupMessageService groupMessageService;
 
     @PostMapping("/group/create")
-    public Long createGroup(@RequestBody CreateGroupRequest request) {
-        return groupService.create(request.getName(), request.getOwnerId());
+    public Long createGroup(
+        @RequestBody SingleNonNullablePropertyRequest request,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
+        return groupService.create(request.getValue(), principal);
     }
 
     @GetMapping("/group/{id}")
-    public GetGroupResponse getGroup(@PathVariable long id) {
-        Group group = groupService.get(id);
+    public GetGroupResponse getGroup(
+        @PathVariable long id,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
+        Group group = groupService.get(id, principal);
         return new GetGroupResponse(group.getName(), group.getOwner().safeId(), group.getOwner().getName());
     }
 
     @PostMapping("/group/{id}/rename")
-    public void renameGroup(@PathVariable long id, @RequestBody SingleNonNullablePropertyRequest request) {
-        groupService.rename(id, request.getValue());
+    public void renameGroup(
+        @PathVariable long id, @RequestBody SingleNonNullablePropertyRequest request,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
+        groupService.rename(id, request.getValue(), principal);
     }
 
     @DeleteMapping("/group/{id}")
-    public void deleteGroup(@PathVariable long id) {
-        groupService.delete(id);
+    public void deleteGroup(@PathVariable long id,
+        @AuthenticationPrincipal KikaPrincipal principal) {
+        groupService.delete(id, principal);
     }
 
-    @GetMapping("/group/{id}/lists")
-    public GroupTaskListsResponse getGroupTaskLists(@PathVariable long id) {
-        List<GroupTaskListResponse> taskLists = groupService.getTaskLists(id).stream()
-            .map(list -> new GroupTaskListResponse(list.safeId(), list.getName()))
-            .collect(Collectors.toList());
-        return new GroupTaskListsResponse(taskLists, taskLists.size());
-    }
+//    @GetMapping("/group/{id}/lists")
+//    public GroupTaskListsResponse getGroupTaskLists(@PathVariable long id) {
+//        List<GroupTaskListResponse> taskLists = groupService.getTaskLists(id).stream()
+//            .map(list -> new GroupTaskListResponse(list.safeId(), list.getName()))
+//            .collect(Collectors.toList());
+//        return new GroupTaskListsResponse(taskLists, taskLists.size());
+//    }
 
     @PostMapping("/group/{groupId}/owner")
     public void transferGroupOwnership(
         @PathVariable long groupId,
-        @RequestBody SingleNonNullableNumericPropertyRequest request
+        @RequestBody SingleNonNullableNumericPropertyRequest request,
+        @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        groupService.transferOwnership(groupId, request.getValue());
+        groupService.transferOwnership(groupId, request.getValue(), principal);
     }
 
     @GetMapping("/group/{id}/members")
-    public GroupMembersResponse getGroupMembers(@PathVariable long id) {
-        List<GroupMemberResponse> members = groupService.getMembers(id)
+    public GroupMembersResponse getGroupMembers(@PathVariable long id,
+        @AuthenticationPrincipal KikaPrincipal principal) {
+        List<GroupMemberResponse> members = groupService.getMembers(id, principal)
             .stream()
             .map(accountRole -> new GroupMemberResponse(accountRole.getId().getAccountId(), accountRole.getRole()))
             .collect(Collectors.toList());
@@ -79,26 +92,30 @@ public class GroupController {
     }
 
     @PostMapping("/group/{groupId}/member")
-    public void addGroupMember(@PathVariable long groupId, @RequestBody AddGroupMemberRequest request) {
-        groupService.addMember(groupId, request.getId(), request.getRole());
+    public void addGroupMember(@PathVariable long groupId, @RequestBody AddGroupMemberRequest request,
+        @AuthenticationPrincipal KikaPrincipal principal) {
+        groupService.addMember(groupId, request.getId(), request.getRole(), principal);
     }
 
     @DeleteMapping("/group/{groupId}/member/{memberId}")
-    public void removeMember(@PathVariable long groupId, @PathVariable long memberId) {
-        groupService.removeMember(groupId, memberId);
+    public void removeMember(@PathVariable long groupId, @PathVariable long memberId,
+        @AuthenticationPrincipal KikaPrincipal principal) {
+        groupService.removeMember(groupId, memberId, principal);
     }
 
     @PostMapping("/group/{groupId}/member/{memberId}/role")
     public void changeMemberRole(
         @PathVariable long groupId, @PathVariable long memberId,
-        @RequestBody SetMemberRoleRequest request
+        @RequestBody SetMemberRoleRequest request,
+        @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        groupService.changeMemberRole(groupId, memberId, request.getRole());
+        groupService.changeMemberRole(groupId, memberId, request.getRole(), principal);
     }
 
     @GetMapping("/group/{groupId}/messages")
-    public GetGroupMessagesResponse getGroupMessages(@PathVariable long groupId) {
-        Set<GetGroupMessageResponse> notifications = groupMessageService.getByGroup(groupId).stream()
+    public GetGroupMessagesResponse getGroupMessages(@PathVariable long groupId,
+        @AuthenticationPrincipal KikaPrincipal principal) {
+        Set<GetGroupMessageResponse> notifications = groupMessageService.getByGroup(groupId, principal).stream()
             .map(message -> new GetGroupMessageResponse(message.id(), message.groupId(),
                 message.createdDate(), message.body()))
             .collect(Collectors.toSet());

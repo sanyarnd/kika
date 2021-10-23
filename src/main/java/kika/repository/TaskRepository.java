@@ -11,6 +11,4 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional
 public interface TaskRepository extends JpaRepository<Task, Long> {
-    @Query("select T from Task T where T.list.id=:id")
-    Collection<Task> getTasksByTaskListId(@Param("id") long id);
 }

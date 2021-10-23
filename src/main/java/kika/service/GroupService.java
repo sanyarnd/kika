@@ -14,8 +14,10 @@ import kika.repository.AccountRoleRepository;
 import kika.repository.AccountSpecialAccessRepository;
 import kika.repository.GroupRepository;
 import kika.repository.TaskListRepository;
+import kika.security.principal.KikaPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,39 +30,60 @@ public class GroupService {
     private final TaskListRepository taskListRepository;
     private final AccountSpecialAccessRepository accountSpecialAccessRepository;
 
+    private void checkOwnerAccess(KikaPrincipal principal, Group group) {
+        if(principal.accountId() != group.getOwner().safeId()) {
+            throw new BadCredentialsException("Owner access denied");
+        }
+    }
+
+    private void checkMemberAccess(KikaPrincipal principal, Group group) {
+        if(group.getMembers().stream()
+            .map(accountRole -> accountRole.getAccount().safeId())
+            .noneMatch(memberId -> memberId == principal.accountId())) {
+            throw new BadCredentialsException("Access denied");
+        }
+    }
+
     @Transactional
-    public long create(@NotNull String name, long ownerId) {
-        Account owner = accountRepository.getById(ownerId);
+    public long create(@NotNull String name, KikaPrincipal principal) {
+        Account owner = accountRepository.getById(principal.accountId());
         Group group = groupRepository.save(new Group(name, owner));
-        AccountRole role = new AccountRole(group, owner);
-        group.addMember(role);
+        AccountRole ownerRole = new AccountRole(group, owner);
+        group.addMember(ownerRole);
 
         return group.safeId();
     }
 
     @Transactional
-    public void rename(long id, @NotNull String name) {
-        groupRepository.getById(id).setName(name);
+    public void rename(long id, @NotNull String name, KikaPrincipal principal) {
+        Group group = groupRepository.getById(id);
+        checkOwnerAccess(principal, group);
+        group.setName(name);
     }
 
     @Transactional
-    public Group get(long id) {
-        return groupRepository.findById(id).orElse(null);
+    public Group get(long id, KikaPrincipal principal) {
+        Group group = groupRepository.getById(id);
+        checkMemberAccess(principal, group);
+        return group;
     }
 
     @Transactional
-    public void delete(long id) {
-        groupRepository.deleteById(id);
+    public void delete(long id, KikaPrincipal principal) {
+        Group group = groupRepository.getById(id);
+        checkOwnerAccess(principal, group);
+        groupRepository.delete(group);
     }
 
-    @Transactional
-    public Collection<TaskList> getTaskLists(long id) {
-        return taskListRepository.getTaskListsByGroupId(id);
-    }
+//    @Transactional
+//    public Collection<TaskList> getTaskLists(long id) {
+//        return taskListRepository.getTaskListsByGroupId(id);
+//    }
 
     @Transactional
-    public boolean transferOwnership(long groupId, long newOwnerId) {
+    public boolean transferOwnership(long groupId, long newOwnerId, KikaPrincipal principal) {
         Group group = groupRepository.getById(groupId);
+        checkOwnerAccess(principal, group);
         if (group.getMembers().stream().noneMatch(accountRole -> accountRole.getAccount().safeId() == newOwnerId)) {
             throw new IllegalArgumentException("New owner must be a member of the group");
         }
@@ -76,12 +99,13 @@ public class GroupService {
     }
 
     @Transactional
-    public void addMember(long groupId, long id, @NotNull AccountRole.Role role) {
+    public void addMember(long groupId, long newMemberId, @NotNull AccountRole.Role role, KikaPrincipal principal) {
         if (role == AccountRole.Role.OWNER) {
             throw new IllegalArgumentException("Can't add a new member with role \"" + role + "\"");
         }
         Group group = groupRepository.getById(groupId);
-        Account member = accountRepository.getById(id);
+        checkOwnerAccess(principal, group);
+        Account member = accountRepository.getById(newMemberId);
         AccountRole existingMember = group.getMembers().stream()
             .filter(accountRole -> accountRole.getAccount().safeId() == member.safeId())
             .findFirst().orElse(null);
@@ -93,8 +117,9 @@ public class GroupService {
     }
 
     @Transactional
-    public void removeMember(long groupId, long memberId) {
+    public void removeMember(long groupId, long memberId, KikaPrincipal principal) {
         Group group = groupRepository.getById(groupId);
+        checkOwnerAccess(principal, group);
         if (group.getOwner().safeId() == memberId) {
             throw new IllegalArgumentException("Can't remove owner");
         }
@@ -127,8 +152,9 @@ public class GroupService {
     }
 
     @Transactional
-    public void changeMemberRole(long groupId, long memberId, @NotNull AccountRole.Role role) {
+    public void changeMemberRole(long groupId, long memberId, @NotNull AccountRole.Role role, KikaPrincipal principal) {
         Group group = groupRepository.getById(groupId);
+        checkOwnerAccess(principal, group);
         if (group.getOwner().safeId() == memberId) {
             throw new IllegalArgumentException("Can't change group owner's role");
         }
@@ -144,7 +170,9 @@ public class GroupService {
     }
 
     @Transactional
-    public Collection<AccountRole> getMembers(long groupId) {
-        return new HashSet<>(groupRepository.getById(groupId).getMembers());
+    public Collection<AccountRole> getMembers(long groupId, KikaPrincipal principal) {
+        Group group = groupRepository.getById(groupId);
+        checkMemberAccess(principal, group);
+        return new HashSet<>(group.getMembers());
     }
 }

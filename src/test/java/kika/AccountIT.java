@@ -1,7 +1,12 @@
 package kika;
 
 import java.util.Map;
+import kika.configuration.security.SecurityConfiguration;
+import kika.domain.Account;
 import kika.domain.AccountRole;
+import kika.repository.AccountRepository;
+import kika.security.jwt.encode.JwtToken;
+import kika.security.jwt.encode.JwtTokenService;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -9,6 +14,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import static kika.JsonUtils.writeJson;
@@ -20,113 +26,120 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@SpringBootTest
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 public class AccountIT extends AbstractIT {
     @Autowired
     private MockMvc mockMvc;
 
-    public String createGroup(String ownerId) throws Exception {
-        return mockMvc.perform(post("/group/create")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(writeJson(Map.of("name", "group", "ownerId", ownerId))))
-            .andReturn().getResponse().getContentAsString();
-    }
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private JwtTokenService jwtTokenService;
 
     @Test
     @Order(1)
     public void createAccount() throws Exception {
-        String id = mockMvc.perform(post("/account/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(writeJson(Map.of("name", "kate"))))
-            .andReturn().getResponse().getContentAsString();
+        TestUtils utils = new TestUtils(mockMvc, accountRepository, jwtTokenService);
+        String id = utils.createAccount();
+        JwtToken token = utils.getToken(id);
 
         mockMvc.perform(get(String.format("/account/%s", id)))
-            .andExpectAll(status().isOk(), jsonPath("$.name").value("kate"));
+            .andExpectAll(status().isUnauthorized());
+
+        mockMvc.perform(get(String.format("/account/%s", id))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, token.accessToken()))
+            .andExpectAll(status().isOk());
     }
 
     @Test
     @Order(2)
     public void renameAccount() throws Exception {
-        String id = mockMvc.perform(post("/account/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(writeJson(Map.of("name", "kate"))))
-            .andReturn().getResponse().getContentAsString();
+        TestUtils utils = new TestUtils(mockMvc, accountRepository, jwtTokenService);
+        String id = utils.createAccount();
+        JwtToken token = utils.getToken(id);
 
         mockMvc.perform(post(String.format("/account/%s/rename", id))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(writeJson(Map.of("value", "kate kate"))))
-            .andExpectAll(status().isOk(), content().string(""));
+                .content(writeJson(Map.of("value", "kate kate")))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, token.accessToken()))
+            .andExpectAll(status().isOk());
 
-        mockMvc.perform(get(String.format("/account/%s", id)))
+        mockMvc.perform(get(String.format("/account/%s", id))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, token.accessToken()))
             .andExpectAll(status().isOk(), jsonPath("$.name").value("kate kate"));
     }
 
     @Test
     @Order(3)
     public void deleteAccount() throws Exception {
-        String ownerId = mockMvc.perform(post("/account/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(writeJson(Map.of("name", "kate"))))
-            .andReturn().getResponse().getContentAsString();
+        TestUtils utils = new TestUtils(mockMvc, accountRepository, jwtTokenService);
+        String ownerId = utils.createAccount();
+        JwtToken ownerToken = utils.getToken(ownerId);
 
-        String accountId = mockMvc.perform(post("/account/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(writeJson(Map.of("name", "kate"))))
-            .andReturn().getResponse().getContentAsString();
+        String accountId = utils.createAccount();
+        JwtToken accountToken = utils.getToken(accountId);
 
-        String groupId = createGroup(ownerId);
+        String groupId = utils.createGroup(ownerId, ownerToken);
 
         mockMvc.perform(post(String.format("/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(writeJson(Map.of("id", accountId))))
+                .content(writeJson(Map.of("id", accountId)))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(delete(String.format("/account/%s", accountId)))
+        mockMvc.perform(delete(String.format("/account/%s", accountId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, accountToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/group/%s", groupId)))
+        mockMvc.perform(get(String.format("/group/%s", groupId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(delete(String.format("/account/%s", ownerId)))
+        mockMvc.perform(delete(String.format("/account/%s", ownerId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/account/%s", ownerId)))
-            .andExpect(status().is5xxServerError());
+        mockMvc.perform(get(String.format("/account/%s", ownerId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/group/%s", ownerId)))
-            .andExpect(status().is5xxServerError());
+        mockMvc.perform(get(String.format("/group/%s", groupId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, accountToken.accessToken()))
+            .andExpect(status().isInternalServerError());
     }
 
     @Test
     @Order(4)
     public void accountGroups() throws Exception {
-        String ownerId = mockMvc.perform(post("/account/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(writeJson(Map.of("name", "kate"))))
-            .andReturn().getResponse().getContentAsString();
+        TestUtils utils = new TestUtils(mockMvc, accountRepository, jwtTokenService);
+        String ownerId = utils.createAccount();
+        JwtToken ownerToken = utils.getToken(ownerId);
 
-        String accountId = mockMvc.perform(post("/account/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(writeJson(Map.of("name", "kate"))))
-            .andReturn().getResponse().getContentAsString();
+        String accountId = utils.createAccount();
+        JwtToken accountToken = utils.getToken(accountId);
 
-        String groupId = createGroup(ownerId);
+        String groupId = utils.createGroup(ownerId, ownerToken);
 
-        mockMvc.perform(get(String.format("/account/%s/groups", accountId)))
+        mockMvc.perform(get(String.format("/account/%s/groups", accountId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, accountToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(0),
                 jsonPath("$.groups").isEmpty());
 
         mockMvc.perform(post(String.format("/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(writeJson(Map.of("id", accountId))))
+                .content(writeJson(Map.of("id", accountId)))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/account/%s/groups", accountId)))
+        mockMvc.perform(get(String.format("/account/%s/groups", accountId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, accountToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.groups[?(@.id == %s)].role", groupId)).value(AccountRole.Role.MEMBER.name()));
 
-        mockMvc.perform(get(String.format("/account/%s/groups", ownerId)))
+        mockMvc.perform(get(String.format("/account/%s/groups", ownerId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.groups[?(@.id == %s)].role", groupId)).value(AccountRole.Role.OWNER.name()));
     }

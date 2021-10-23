@@ -12,6 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional
 public interface GroupRepository extends JpaRepository<Group, Long> {
-    @Query("select AR from AccountRole AR left join Group G on AR.group.id=G.id where AR.account.id=:accountId")
+    @Query("select AR from AccountRole AR left join Group G on AR.id.groupId=G.id where AR.id.accountId=:accountId")
     Collection<AccountRole> getAccountGroups(@Param("accountId") long accountId);
 }
