@@ -1,0 +1,81 @@
+<template>
+  <span>
+    <ul v-for="(item, key) in items" :id="item.id" :key="key" class="list-group list-group-flush">
+      <li class="list-group-item">
+        <b-row>
+          <b-col class="text-truncate">
+            {{ item.name }}
+            <span v-b-toggle="getChildrenCollapseId(item.id)">
+              <b-icon-chevron-right
+                v-if="item.children.length > 0"
+                :id="'chevron-' + item.id"
+                class="ml-1 rotate"
+                @click="toggleRotation(item.id)"
+              ></b-icon-chevron-right
+            ></span>
+          </b-col>
+          <b-col cols="1" class="text-right mr-2">
+            <span v-if="item.ticked">
+              <b-icon :icon="getIcon(item)" scale="2" variant="success"
+                ><b-icon-check variant="success"></b-icon-check
+              ></b-icon>
+            </span>
+          </b-col>
+        </b-row>
+      </li>
+      <b-collapse :id="getChildrenCollapseId(item.id)" class="ml-3">
+        <task-tree-view :items="item.children"></task-tree-view>
+      </b-collapse>
+    </ul>
+  </span>
+</template>
+
+<script lang="ts">
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import TaskTreeView from "@/components/TaskTreeView.vue";
+
+@Component({ name: "TaskTreeView", components: { TaskTreeView } })
+export default class extends Vue {
+  @Prop({ default: [] })
+  private readonly items!: TreeItem[];
+
+  private getChildrenCollapseId(id: number): string {
+    return "node-" + id + "-children-collapse";
+  }
+
+  private getIcon(item: TreeItem): string {
+    if (item.children.length > 0) {
+      if (item.children.every(child => child.ticked)) {
+        return "check-all";
+      }
+      return "";
+    } else {
+      if (item.ticked) {
+        return "check";
+      }
+      return "";
+    }
+  }
+
+  private toggleRotation(id: number): void {
+    document.getElementById("chevron-" + id)!.classList.toggle("down");
+  }
+}
+
+export interface TreeItem {
+  name: string;
+  id: number;
+  ticked: boolean;
+  children: TreeItem[];
+}
+</script>
+<style scoped lang="scss">
+.rotate {
+  transition: all 0.2s linear;
+}
+
+.rotate.down {
+  transform: rotate(90deg);
+}
+</style>

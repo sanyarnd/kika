@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration
+    xmlns="http://logging.apache.org/log4j/2.0/config"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://logging.apache.org/log4j/2.0/config https://raw.githubusercontent.com/apache/logging-log4j2/master/log4j-core/src/main/resources/Log4j-config.xsd"
+    strict="true"
+>
+    <Appenders>
+        <Console name="STDOUT_PLAIN" target="SYSTEM_OUT">
+            <PatternLayout
+                pattern="%highlight{%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p --- [%pid] [%thread] %-40.40logger{39} : %m%n}"/>
+        </Console>
+        <Console name="STDOUT_JSON" target="SYSTEM_OUT">
+            <JsonLayout compact="true" locationInfo="true" complete="false" eventEol="true"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="ch.qos.logback" level="WARN"/>
+        <Logger name="com.sun" level="WARN"/>
+        <Logger name="com.zaxxer" level="WARN"/>
+        <Logger name="javax.activation" level="WARN"/>
+        <Logger name="javax.management.remote" level="WARN"/>
+        <Logger name="javax.xml.bind" level="WARN"/>
+        <Logger name="jdk.event.security" level="INFO"/>
+        <Logger name="liquibase" level="WARN"/>
+        <Logger name="LiquibaseSchemaResolver" level="INFO"/>
+        <Logger name="org.apache" level="WARN"/>
+        <Logger name="org.apache.catalina.startup.DigesterFactory" level="ERROR"/>
+        <Logger name="org.apache.catalina.util.LifecycleBase" level="ERROR"/>
+        <Logger name="org.apache.coyote.http11.Http11NioProtocol" level="WARN"/>
+        <Logger name="org.apache.sshd.common.util.SecurityUtils" level="WARN"/>
+        <Logger name="org.apache.tomcat.util.net.NioSelectorPool" level="WARN"/>
+        <Logger name="org.eclipse.jetty.util.component.AbstractLifeCycle" level="ERROR"/>
+        <Logger name="org.hibernate" level="WARN"/>
+        <Logger name="org.hibernate.ejb.HibernatePersistence" level="OFF"/>
+        <Logger name="org.hibernate.engine.internal.StatisticalLoggingSessionEventListener" level="INFO"/>
+        <Logger name="org.hibernate.validator" level="WARN"/>
+        <Logger name="org.hibernate.validator.internal.util.Version" level="WARN"/>
+        <Logger name="org.opensaml" level="INFO"/>
+        <Logger name="org.postgresql" level="WARN"/>
+        <Logger name="org.quartz.core" level="WARN"/>
+        <Logger name="org.springframework" level="WARN"/>
+        <Logger name="org.springframework.boot.actuate.endpoint.jmx" level="WARN"/>
+        <Logger name="org.springframework.cache" level="WARN"/>
+        <Logger name="org.springframework.security" level="WARN"/>
+        <Logger name="org.springframework.web" level="WARN"/>
+        <Logger name="sun.rmi" level="WARN"/>
+        <Logger name="sun.rmi.transport" level="WARN"/>
+
+        <Logger name="kika" level="DEBUG"/>
+
+        <Root level="INFO">
+            <AppenderRef ref="STDOUT_${sys:LOG4J_LAYOUT:-PLAIN}"/>
+        </Root>
+    </Loggers>
+
+</Configuration>

@@ -1,0 +1,43 @@
+{
+    "compilerOptions": {
+        "target": "ES2016",
+        "module": "esnext",
+        "strict": true,
+        "jsx": "preserve",
+        "importHelpers": true,
+        "moduleResolution": "node",
+        "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
+        "alwaysStrict": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "strictPropertyInitialization": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "suppressImplicitAnyIndexErrors": true,
+        "esModuleInterop": true,
+        "sourceMap": true,
+        "removeComments": false,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "types": [
+            "webpack-env"
+        ],
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "src/main/typescript/*"
+            ]
+        }
+    },
+    "include": [
+        "src/main/typescript/**/*.ts",
+        "src/main/typescript/**/*.tsx",
+        "src/main/typescript/**/*.vue"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
