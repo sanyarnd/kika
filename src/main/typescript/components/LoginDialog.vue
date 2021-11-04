@@ -27,8 +27,7 @@
           <b-button :disabled="loggingIn" block variant="primary" @click="login">Войти</b-button>
           <hr />
           <b-button v-b-popover.hover.bottom="'Войти через GitHub'" variant="outline-dark" :href="githubUrl"
-            ><b-icon-github></b-icon-github
-          ></b-button>
+            ><font-awesome-icon :icon="['fab', 'github']"/></b-button>
           <b-toast id="error" title="Error" no-auto-hide variant="danger" class="m-0 rounded-0" toaster="toaster">
             {{ alertMessage }}
           </b-toast>

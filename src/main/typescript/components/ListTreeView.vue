@@ -11,15 +11,15 @@
         <b-row>
           <b-col class="text-truncate">
             {{ item.name }}
-            </b-col>
+          </b-col>
           <b-col class="text-right" cols="2">
             <span>
-              <b-icon-chevron-right
+              <font-awesome-icon icon="chevron-right"
                 v-if="item.children.length > 0"
-                :class="item.expanded ? 'down' : ''"
                 :id="'list-chevron-' + item.id"
+                :class="item.expanded ? 'down' : ''"
                 class="ml-1 rotate"
-              ></b-icon-chevron-right
+              ></font-awesome-icon
             ></span>
           </b-col>
         </b-row>

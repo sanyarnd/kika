@@ -75,11 +75,6 @@ public class GroupService {
         groupRepository.delete(group);
     }
 
-//    @Transactional
-//    public Collection<TaskList> getTaskLists(long id) {
-//        return taskListRepository.getTaskListsByGroupId(id);
-//    }
-
     @Transactional
     public boolean transferOwnership(long groupId, long newOwnerId, KikaPrincipal principal) {
         Group group = groupRepository.getById(groupId);

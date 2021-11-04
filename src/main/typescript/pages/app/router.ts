@@ -22,16 +22,16 @@ const routes: RouteConfig[] = [
     component: () => import("@/pages/app/views/GroupEdit.vue")
   },
   {
+    path: "/list/:id/edit",
+    props: true,
+    name: "list-edit",
+    component: () => import("@/pages/app/views/ListEdit.vue")
+  },
+  {
     path: "/list/:id",
     props: true,
     name: "list",
     component: () => import("@/pages/app/views/List.vue")
-  },
-  {
-    path: "/group/:id/edit",
-    props: true,
-    name: "list-edit",
-    component: () => import("@/pages/app/views/ListEdit.vue")
   },
   {
     path: "/task/:id",
@@ -53,8 +53,7 @@ const routes: RouteConfig[] = [
 ];
 
 export const router = new VueRouter({
-  // base: process.env.BASE_URL,
-  base: "/app",
+  base: `${process.env.BASE_URL}/app`,
   mode: "history",
   routes: routes
 });

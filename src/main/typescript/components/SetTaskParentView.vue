@@ -1,31 +1,26 @@
 <template>
   <span>
-    <b-list-group flush v-for="(item, key) in items" :id="taskElementId(item.id)" @click.stop :key="key">
-      <b-list-group-item v-if="task.id === item.id" disabled>
-        <b-col class="text-truncate">
-          <i class="fas fa-circle fa-xs"></i>
-          {{ item.name }}
-        </b-col>
-      </b-list-group-item>
+    <b-list-group v-for="(item, key) in items" :id="taskElementId(item.id)" :key="key" flush @click.stop>
       <b-list-group-item
-        v-else
-        :active="newParent.id === item.id"
+        v-if="task.id !== item.id"
+        :active="highlight(item.id)"
+        :disabled="frozenElem.type === 'GROUP' && frozenElem.id === item.id"
+        :style="{
+          'text-decoration': frozenElem.type === 'GROUP' && frozenElem.id === item.id ? 'line-through' : 'none'
+        }"
       >
-        <b-row @click="toggleSelection(item.id)" v-b-toggle="getTaskChildrenCollapseId(item.id)">
+        <b-row v-b-toggle="getTaskChildrenCollapseId(item.id)" @click="toggleSelection(item.id)">
           <b-col class="text-truncate">
-            <i class="fas fa-circle fa-xs"></i>
+            <font-awesome-icon icon="circle" class="kika-icon"/>
             {{ item.name }}
-            </b-col>
+          </b-col>
           <b-col v-if="item.children.length > 0" class="text-right" cols="2">
-            <b-icon-chevron-right
-              :id="taskChevronId(item.id)"
-              class="ml-1 rotate"
-            />
+            <font-awesome-icon icon="chevron-right" :id="taskChevronId(item.id)" class="ml-1 rotate"/>
           </b-col>
         </b-row>
       </b-list-group-item>
       <b-collapse :id="getTaskChildrenCollapseId(item.id)" class="ml-3">
-        <set-task-parent-view :task="task" :items="item.children" :new-list="newList" :new-parent="newParent"/>
+        <set-task-parent-view :task="task" :items="item.children" :move-to="moveTo" :frozen-elem="frozenElem" />
       </b-collapse>
     </b-list-group>
   </span>
@@ -36,6 +31,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import SetTaskParentView from "@/components/SetTaskParentView.vue";
 import { Status } from "@/pages/app/views/Task.vue";
+import { ElemInfo, MoveInfoType } from "@/components/MoveObjectComponent.vue";
 
 @Component({ name: "SetTaskParentView", components: { SetTaskParentView } })
 export default class extends Vue {
@@ -46,14 +42,14 @@ export default class extends Vue {
   private readonly items!: Task[];
 
   @Prop()
-  public newList!: CurrentSelection;
+  private moveTo!: ElemInfo;
 
   @Prop()
-  public newParent!: CurrentSelection;
+  private readonly frozenElem!: ElemInfo;
 
   private toggleRotation(id: string): void {
     const chevron = document.getElementById(this.taskChevronId(id));
-    if(chevron != null) {
+    if (chevron != null) {
       chevron.classList.toggle("down");
     }
   }
@@ -63,15 +59,9 @@ export default class extends Vue {
   }
 
   private toggleSelection(id: string): void {
-    // if (this.newParent.id == id) {
-    //   this.newParent.id = null;
-    // } else {
-    this.toggleRotation(id)
-      this.newParent.id = id;
-      this.newList.id = null;
-    // }
-    console.log(this.newList.id);
-    console.log(this.newParent.id);
+    this.toggleRotation(id);
+    this.moveTo.id = id;
+    this.moveTo.type = "TASK";
   }
 
   private getTaskChildrenCollapseId(id: string): string {
@@ -80,6 +70,10 @@ export default class extends Vue {
 
   private taskElementId(id: string): string {
     return `task-${id}`;
+  }
+
+  private highlight(id: string): boolean {
+    return this.moveTo.type == "TASK" && this.moveTo.id == id;
   }
 }
 
@@ -104,5 +98,9 @@ export interface CurrentSelection {
 
 .rotate.down {
   transform: rotate(90deg);
+}
+
+.kika-icon {
+  width: 24px;
 }
 </style>

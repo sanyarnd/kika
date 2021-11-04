@@ -1,11 +1,13 @@
 <template>
   <b-navbar variant="faded">
-    <b-navbar-brand v-b-toggle:sidebar-1><i class="fas fa-bars"></i></b-navbar-brand>
+    <b-navbar-brand v-b-toggle:sidebar-1>
+      <font-awesome-icon icon="bars" />
+    </b-navbar-brand>
     <b-link
-        class="text-truncate breadcrumb-item text-dark"
-        v-for="(item, key) in items"
-        :key="key"
-        :to="{ name: item.type, params: { id: item.id } }"
+      v-for="(item, key) in items"
+      :key="key"
+      class="text-truncate breadcrumb-item text-dark"
+      :to="{ name: item.type, params: { id: item.id } }"
     >
       {{ item.name }}
     </b-link>
@@ -14,9 +16,9 @@
 
 <script lang="ts">
 import Vue from "vue";
-import {Component, Prop} from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 
-@Component({components: {}})
+@Component({ components: {} })
 export default class extends Vue {
   @Prop()
   private readonly items!: NavigationItem[];

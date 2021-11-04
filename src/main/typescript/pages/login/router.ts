@@ -17,7 +17,7 @@ const routes: RouteConfig[] = [
 ];
 
 export const router = new VueRouter({
-  base: "/login",
+  base: `${process.env.BASE_URL}/login`,
   mode: "history",
   routes: routes
 });

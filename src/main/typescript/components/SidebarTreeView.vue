@@ -1,6 +1,6 @@
 <template>
   <span>
-    <b-list-group flush v-for="(item, key) in items" :id="item.id" :key="key">
+    <b-list-group v-for="(item, key) in items" :id="item.id" :key="key" flush>
       <b-list-group-item
         v-b-toggle="getChildrenCollapseId(item.id)"
         class="bg-transparent"
@@ -8,21 +8,23 @@
       >
         <b-row class="bg-transparent">
           <b-col class="text-truncate text-dark bg-transparent">
+            <font-awesome-icon :icon="item.icon" class="kika-icon"/>
             {{ item.name }}
           </b-col>
           <b-col class="text-right" cols="2">
-              <b-icon-chevron-right
-                v-if="item.children.length > 0"
-                :id="'chevron-' + item.id"
-                class="ml-1 rotate"
-              ></b-icon-chevron-right
-            >
+            <font-awesome-icon icon="chevron-right"
+              v-if="item.children.length > 0"
+              :id="'chevron-' + item.id"
+              class="ml-1 rotate"
+            ></font-awesome-icon>
           </b-col>
         </b-row>
       </b-list-group-item>
       <b-collapse :id="getChildrenCollapseId(item.id)">
         <b-list-group v-for="(subitem, key) in item.children" :id="subitem.id" :key="key" flush>
-          <b-list-group-item class="border-bottom text-secondary" button :href="subitem.link">{{ subitem.name }}</b-list-group-item>
+          <b-list-group-item class="border-bottom text-secondary" button :href="subitem.link">{{
+            subitem.name
+          }}</b-list-group-item>
         </b-list-group>
       </b-collapse>
     </b-list-group>
@@ -50,6 +52,7 @@ export default class extends Vue {
 export interface SidebarTreeItem {
   name: string;
   id: number;
+  icon: string;
   link: string;
   children: SidebarTreeItem[];
 }
@@ -61,5 +64,9 @@ export interface SidebarTreeItem {
 
 .rotate.down {
   transform: rotate(90deg);
+}
+
+.kika-icon {
+  width: 24px;
 }
 </style>

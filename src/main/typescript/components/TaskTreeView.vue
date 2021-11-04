@@ -6,21 +6,15 @@
           <b-col class="text-truncate">
             {{ item.name }}
             <span v-b-toggle="getChildrenCollapseId(item.id)">
-              <b-icon-chevron-right
+              <font-awesome-icon icon="chevron-right"
                 v-if="item.children.length > 0"
                 :id="'chevron-' + item.id"
                 class="ml-1 rotate"
                 @click="toggleRotation(item.id)"
-              ></b-icon-chevron-right
+              ></font-awesome-icon
             ></span>
           </b-col>
-          <b-col cols="1" class="text-right mr-2">
-            <span v-if="item.ticked">
-              <b-icon :icon="getIcon(item)" scale="2" variant="success"
-                ><b-icon-check variant="success"></b-icon-check
-              ></b-icon>
-            </span>
-          </b-col>
+
         </b-row>
       </li>
       <b-collapse :id="getChildrenCollapseId(item.id)" class="ml-3">
