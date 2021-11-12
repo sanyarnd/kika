@@ -11,20 +11,21 @@
 
     <groupId>kika</groupId>
     <artifactId>kika</artifactId>
-    <version>0.0.1</version>
+    <version>${revision}</version>
     <description>Kika: family organizer</description>
 
     <properties>
+        <revision>0.01</revision>
         <java.version>17</java.version>
 
         <jetbrains-annotations.version>22.0.0</jetbrains-annotations.version>
 
         <zalando-problem-spring.version>0.27.0</zalando-problem-spring.version>
         <jjwt.version>0.11.2</jjwt.version>
-        <springdoc-openapi.version>1.5.11</springdoc-openapi.version>
+        <springdoc-openapi.version>1.5.12</springdoc-openapi.version>
 
-        <testcontainers.version>1.16.0</testcontainers.version>
-        <archunit-junit5.version>0.21.0</archunit-junit5.version>
+        <testcontainers.version>1.16.2</testcontainers.version>
+        <archunit-junit5.version>0.22.0</archunit-junit5.version>
 
         <checkstyle.version>9.0</checkstyle.version>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
@@ -196,6 +197,12 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -274,7 +281,6 @@
                         <plugin>
                             <groupId>com.h3xstream.findsecbugs</groupId>
                             <artifactId>findsecbugs-plugin</artifactId>
-                            <!-- Auto-update to the latest stable -->
                             <version>${findsecbugs.version}</version>
                         </plugin>
                         <plugin>
