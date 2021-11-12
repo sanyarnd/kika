@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [ master ]
     paths:
-      - '.github/workflows/java/**'
+      - '.github/workflows/backend-*'
       - 'pom.xml'
       - 'src/main/java/**'
       - 'src/test/java/**'
@@ -33,7 +33,7 @@ jobs:
           cache: maven
 
       - name: Calculate version
-        run: export REVISION=$(grep -oP '(?<=<revision>).*?(?=</revision>)' pom.xml)-${GITHUB_SHA:0:8}
+        run: echo REVISION=$(grep -oP '(?<=<revision>).*?(?=</revision>)' pom.xml)-${GITHUB_SHA:0:8} >> $GITHUB_ENV
 
       - name: Maven Build
         run: mvn package -Drevision=${REVISION}
