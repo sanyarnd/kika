@@ -1,0 +1,49 @@
+name: Spring Backend CI
+
+on:
+  pull_request:
+    branches: [ master ]
+    paths:
+      - '.github/workflows/java/**'
+      - 'pom.xml'
+      - 'src/main/java/**'
+      - 'src/test/java/**'
+  push:
+    branches: [ master ]
+    paths:
+      - '.github/workflows/backend-*'
+      - 'pom.xml'
+      - 'src/main/java/**'
+      - 'src/test/java/**'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Prepare JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Calculate version
+        run: export REVISION=$(grep -oP '(?<=<revision>).*?(?=</revision>)' pom.xml)-${GITHUB_SHA:0:8}
+
+      - name: Maven Build
+        run: mvn package -Drevision=${REVISION}
+
+      - name: Maven Integration Tests
+        run: mvn -DskipTests=true verify -Drevision=${REVISION}
+
+      - name: Store JAR file
+        uses: actions/upload-artifact@v2
+        with:
+          name: kika.jar
+          path: target/kika.jar
+          retention-days: 3
