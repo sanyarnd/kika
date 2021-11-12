@@ -1,0 +1,28 @@
+name: Spring Backend CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Prepare JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Maven Build
+        run: |
+          export REVISION=$(grep -oP '(?<=<revision>).*?(?=</revision>)' pom.xml)-${GITHUB_SHA:0:8}
+          mvn package -Drevision=${REVISION}
