@@ -66,11 +66,18 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             // enabled
             .headers().and()
             .cors().and()
-            .oauth2Login(c -> c.successHandler(oauth2SuccessHandler))
+            .oauth2Login(c -> {
+                // OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI
+                c.authorizationEndpoint().baseUri("/api/oauth2/authorization");
+                // OAuth2LoginAuthenticationFilter.DEFAULT_FILTER_PROCESSES_URI
+                c.redirectionEndpoint().baseUri("/api/oauth2/code/*");
+
+                c.successHandler(oauth2SuccessHandler);
+            })
 
             .authorizeRequests(requests -> {
                 requests.mvcMatchers(HttpMethod.OPTIONS).permitAll();
-                requests.mvcMatchers("/oauth2/**", "/login/oauth2/**", "/login/refresh").permitAll();
+                requests.mvcMatchers("/api/oauth2/**", "/api/login/refresh").permitAll();
                 requests.anyRequest().authenticated();
             });
     }
