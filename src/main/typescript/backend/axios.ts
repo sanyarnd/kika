@@ -2,17 +2,9 @@ import originalAxios from "axios";
 import { authenticationExpireHandler } from "@/backend/authenticationExpireHandler";
 
 export const axios = originalAxios.create({
-  timeout: 45 * 1000 // 45s
+  timeout: 30_000
 });
 
-axios.interceptors.request.use(
-  value => {
-    const accessToken = localStorage.getItem("accessToken");
-    value.headers["Authorization"] = `Bearer ${accessToken}`;
-    return value;
-  },
-  error => Promise.reject(error)
-);
 axios.interceptors.response.use(
   value => value,
   error => {
