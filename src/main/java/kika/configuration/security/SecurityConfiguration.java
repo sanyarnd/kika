@@ -78,7 +78,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             .authorizeRequests(requests -> {
                 requests.mvcMatchers(HttpMethod.OPTIONS).permitAll();
                 requests.mvcMatchers("/api/oauth2/**", "/api/login/refresh").permitAll();
-                requests.anyRequest().authenticated();
+                requests.mvcMatchers("/api/**", "/swagger-ui/**").authenticated();
+                requests.mvcMatchers("/actuator/**").authenticated(); // TODO: admin only
+                requests.anyRequest().denyAll();
             });
     }
 }
