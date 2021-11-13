@@ -31,7 +31,7 @@ public class TestUtils {
     }
 
     public String createGroup(String ownerId, JwtToken ownerToken) throws Exception {
-        return mockMvc.perform(post("/group/create")
+        return mockMvc.perform(post("/api/group/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("value", "group")))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
@@ -39,7 +39,7 @@ public class TestUtils {
     }
 
     public String createList(String groupId, JwtToken creatorToken) throws Exception {
-        return mockMvc.perform(post("/list/create")
+        return mockMvc.perform(post("/api/list/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "list", "groupId", groupId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, creatorToken.accessToken()))
@@ -47,7 +47,7 @@ public class TestUtils {
     }
 
     public String createTask(String listId, JwtToken creatorToken) throws Exception {
-        return mockMvc.perform(post("/task/create")
+        return mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", listId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, creatorToken.accessToken()))

@@ -49,7 +49,7 @@ public class TaskIT extends AbstractIT {
         String groupId = utils.createGroup(ownerId, ownerToken);
         String listId = utils.createList(groupId, ownerToken);
 
-        mockMvc.perform(post("/task/create")
+        mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", listId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
@@ -65,51 +65,51 @@ public class TaskIT extends AbstractIT {
         String groupId = utils.createGroup(ownerId, ownerToken);
         String listId = utils.createList(groupId, ownerToken);
 
-        String taskId = mockMvc.perform(post("/task/create")
+        String taskId = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", listId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(post(String.format("/task/%s/rename", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/rename", taskId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"value\": null}")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(post(String.format("/task/%s/rename", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/rename", taskId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("value", "kate's task")))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.name").value("kate's task"),
                 jsonPath("$.description").isEmpty(),
                 jsonPath("$.parentId").isEmpty(),
                 jsonPath("$.childrenIds").isEmpty());
 
-        mockMvc.perform(post(String.format("/task/%s/description", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/description", taskId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("value", "an awesome task")))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.name").value("kate's task"),
                 jsonPath("$.description").value("an awesome task"),
                 jsonPath("$.parentId").isEmpty(),
                 jsonPath("$.childrenIds").isEmpty());
 
-        mockMvc.perform(post(String.format("/task/%s/description", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/description", taskId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"value\": null}")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.name").value("kate's task"),
                 jsonPath("$.description").isEmpty(),
@@ -126,29 +126,29 @@ public class TaskIT extends AbstractIT {
         String groupId = utils.createGroup(ownerId, ownerToken);
         String listId = utils.createList(groupId, ownerToken);
 
-        String taskId = mockMvc.perform(post("/task/create")
+        String taskId = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", listId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(delete(String.format("/task/%s", taskId))
+        mockMvc.perform(delete(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/list/%s", listId))
+        mockMvc.perform(get(String.format("/api/list/%s", listId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/group/%s", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/account/%s", ownerId))
+        mockMvc.perform(get("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
     }
@@ -162,50 +162,50 @@ public class TaskIT extends AbstractIT {
         String groupId = utils.createGroup(ownerId, ownerToken);
         String listId = utils.createList(groupId, ownerToken);
 
-        String parentTaskId = mockMvc.perform(post("/task/create")
+        String parentTaskId = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", listId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
-        String childTask1Id = mockMvc.perform(post("/task/create")
+        String childTask1Id = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", listId, "parentId", parentTaskId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
-        String childTask2Id = mockMvc.perform(post("/task/create")
+        String childTask2Id = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", listId, "parentId", parentTaskId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(delete(String.format("/task/%s", childTask1Id))
+        mockMvc.perform(delete(String.format("/api/task/%s", childTask1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/task/%s", childTask1Id))
+        mockMvc.perform(get(String.format("/api/task/%s", childTask1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/task/%s", parentTaskId))
+        mockMvc.perform(get(String.format("/api/task/%s", parentTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/task/%s", childTask2Id))
-                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
-            .andExpect(status().isOk());
-
-        mockMvc.perform(delete(String.format("/task/%s", parentTaskId))
+        mockMvc.perform(get(String.format("/api/task/%s", childTask2Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s", parentTaskId))
+        mockMvc.perform(delete(String.format("/api/task/%s", parentTaskId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get(String.format("/api/task/%s", parentTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
-        mockMvc.perform(get(String.format("/task/%s", childTask2Id))
+        mockMvc.perform(get(String.format("/api/task/%s", childTask2Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/list/%s/tasks", listId))
+        mockMvc.perform(get(String.format("/api/list/%s/tasks", listId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.tasks").isEmpty(),
                 jsonPath("$.count").value(0));
@@ -222,40 +222,40 @@ public class TaskIT extends AbstractIT {
         String list2Id = utils.createList(groupId, ownerToken);
 
         // Task 1 @ list 1
-        String task1Id = mockMvc.perform(post("/task/create")
+        String task1Id = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", list1Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
         // Task 2 @ list 2
-        String task2Id = mockMvc.perform(post("/task/create")
+        String task2Id = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", list2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
         // Task 3 @ list 2, parent: task 1
-        String task3Id = mockMvc.perform(post("/task/create")
+        String task3Id = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", list1Id, "parentId", task1Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
         // Set task 2 as a parent of task 3 => error, they are in different lists
-        mockMvc.perform(post(String.format("/task/%s/move", task3Id))
+        mockMvc.perform(post(String.format("/api/task/%s/move", task3Id))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("parentId", task2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
         // Make parent of task 3 null => success, now list 1 has two tasks with null parents: task 1 and task 3
-        mockMvc.perform(post(String.format("/task/%s/move", task3Id))
+        mockMvc.perform(post(String.format("/api/task/%s/move", task3Id))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"parentId\": null}")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/list/%s/tasks", list1Id))
+        mockMvc.perform(get(String.format("/api/list/%s/tasks", list1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath(String.format("$.tasks[?(@.id == %s)].parentId", task1Id), nullValue(), Long.class),
                 jsonPath(String.format("$.tasks[?(@.id == %s)].parentId", task3Id), nullValue(), Long.class),
@@ -263,21 +263,21 @@ public class TaskIT extends AbstractIT {
 
         // Set task 3 as a parent of task 1 => success, now list 1 has only one task with null parent: task 3,
         // which has 1 child task: task 1
-        mockMvc.perform(post(String.format("/task/%s/move", task1Id))
+        mockMvc.perform(post(String.format("/api/task/%s/move", task1Id))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("parentId", task3Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/list/%s/tasks", list1Id))
+        mockMvc.perform(get(String.format("/api/list/%s/tasks", list1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(
                 jsonPath(String.format("$.tasks[?(@.id == %s)].parentId", task1Id)).value(Integer.parseInt(task3Id)),
                 jsonPath(String.format("$.tasks[?(@.id == %s)].parentId", task3Id), nullValue(), Long.class),
                 jsonPath("$.count").value(2));
-        mockMvc.perform(get(String.format("/task/%s", task1Id))
+        mockMvc.perform(get(String.format("/api/task/%s", task1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(jsonPath("$.parentId").value(task3Id));
-        mockMvc.perform(get(String.format("/task/%s", task3Id))
+        mockMvc.perform(get(String.format("/api/task/%s", task3Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.childrenIds").value(hasItem(parseInt(task1Id))),
                 jsonPath("$.childrenIds").value(hasSize(1)));
@@ -293,76 +293,76 @@ public class TaskIT extends AbstractIT {
         String list1Id = utils.createList(groupId, ownerToken);
         String list2Id = utils.createList(groupId, ownerToken);
 
-        String parentTaskId = mockMvc.perform(post("/task/create")
+        String parentTaskId = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", list1Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
-        String childTaskId = mockMvc.perform(post("/task/create")
+        String childTaskId = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", list1Id, "parentId", parentTaskId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
-        String childChildTaskId = mockMvc.perform(post("/task/create")
+        String childChildTaskId = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", list1Id, "parentId", childTaskId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
-        String childChildChildTaskId = mockMvc.perform(post("/task/create")
+        String childChildChildTaskId = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", list1Id, "parentId", childChildTaskId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
         // Move childTask to list 2 (without specifying its parent) => success
-        mockMvc.perform(post(String.format("/task/%s/move", childTaskId))
+        mockMvc.perform(post(String.format("/api/task/%s/move", childTaskId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("listId", list2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s", childTaskId))
+        mockMvc.perform(get(String.format("/api/task/%s", childTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.parentId", nullValue(), Long.class),
                 jsonPath("$.listId").value(list2Id),
                 jsonPath("$.childrenIds").value(hasSize(1)));
 
-        mockMvc.perform(get(String.format("/task/%s", childChildTaskId))
+        mockMvc.perform(get(String.format("/api/task/%s", childChildTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.parentId").value(childTaskId),
                 jsonPath("$.listId").value(list2Id));
 
-        mockMvc.perform(get(String.format("/task/%s", childChildChildTaskId))
+        mockMvc.perform(get(String.format("/api/task/%s", childChildChildTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.parentId").value(childChildTaskId),
                 jsonPath("$.listId").value(list2Id));
 
-        mockMvc.perform(get(String.format("/task/%s", parentTaskId))
+        mockMvc.perform(get(String.format("/api/task/%s", parentTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(jsonPath("$.childrenIds").isEmpty());
 
         // Move childChildTask back to list 1 and set parentTask as its parent => success
-        mockMvc.perform(post(String.format("/task/%s/move", childChildTaskId))
+        mockMvc.perform(post(String.format("/api/task/%s/move", childChildTaskId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("listId", list1Id, "parentId", parentTaskId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s", parentTaskId))
+        mockMvc.perform(get(String.format("/api/task/%s", parentTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.childrenIds").value(hasSize(1)),
                 jsonPath("$.childrenIds").value(hasItem(Integer.parseInt(childChildTaskId))));
 
-        mockMvc.perform(get(String.format("/task/%s", childTaskId))
+        mockMvc.perform(get(String.format("/api/task/%s", childTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(jsonPath("$.childrenIds").isEmpty());
 
-        mockMvc.perform(get(String.format("/task/%s", childChildTaskId))
+        mockMvc.perform(get(String.format("/api/task/%s", childChildTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.parentId").value(parentTaskId),
                 jsonPath("$.listId").value(list1Id));
 
-        mockMvc.perform(get(String.format("/task/%s", childChildChildTaskId))
+        mockMvc.perform(get(String.format("/api/task/%s", childChildChildTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.parentId").value(childChildTaskId),
                 jsonPath("$.listId").value(list1Id));
@@ -382,122 +382,122 @@ public class TaskIT extends AbstractIT {
         String account2Id = utils.createAccount();
         JwtToken account2Token = utils.getToken(account2Id);
 
-        String taskId = mockMvc.perform(post("/task/create")
+        String taskId = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", listId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
         // Trying to assign to an account that's not in group => error
-        mockMvc.perform(post(String.format("/task/%s/assignee", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/assignee", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isUnauthorized());
 
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", account1Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", account2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
         // Restricting list access to account2
-        mockMvc.perform(post(String.format("/list/%s/accounts", listId))
+        mockMvc.perform(post(String.format("/api/list/%s/accounts", listId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("{\"values\": %s}", numericList(account2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
         // Trying to assign to an account that's got no access to the list => error
-        mockMvc.perform(post(String.format("/task/%s/assignee", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/assignee", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isUnauthorized());
 
         // Removing special access from the list and trying to assign to account1 and account2
-        mockMvc.perform(post(String.format("/list/%s/accounts", listId))
+        mockMvc.perform(post(String.format("/api/list/%s/accounts", listId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"values\": []}")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isOk());
 
         // Assigning account1 and account2 (both automatically get subscribed)
-        mockMvc.perform(post(String.format("/task/%s/assignee", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/assignee", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(post(String.format("/task/%s/assignee", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/assignee", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s/assignees", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s/assignees", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.values[?(@.id == %s)]", account1Id)).exists(),
                 jsonPath(String.format("$.values[?(@.id == %s)]", account2Id)).exists());
-        mockMvc.perform(get(String.format("/task/%s/subscribers", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s/subscribers", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.values[?(@.id == %s)]", account1Id)).exists(),
                 jsonPath(String.format("$.values[?(@.id == %s)]", account2Id)).exists());
 
         // Un-assigning account1, checking that subscription remains
-        mockMvc.perform(delete(String.format("/task/%s/assignee", taskId))
+        mockMvc.perform(delete(String.format("/api/task/%s/assignee", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/task/%s/assignees", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s/assignees", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.values[?(@.id == %s)]", account1Id)).doesNotExist(),
                 jsonPath(String.format("$.values[?(@.id == %s)]", account2Id)).exists());
-        mockMvc.perform(get(String.format("/task/%s/subscribers", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s/subscribers", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.values[?(@.id == %s)]", account1Id)).exists(),
                 jsonPath(String.format("$.values[?(@.id == %s)]", account2Id)).exists());
 
         // Assigning account1 and account2 again
-        mockMvc.perform(post(String.format("/task/%s/assignee", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/assignee", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(post(String.format("/task/%s/assignee", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/assignee", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isOk());
 
         // Deleting account1 and checking that it's not assigned or subscribed anymore
-        mockMvc.perform(delete(String.format("/account/%s", account1Id))
+        mockMvc.perform(delete("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/account/%s", account1Id))
+        mockMvc.perform(get("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/task/%s/assignees", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s/assignees", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).doesNotExist(),
                 jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).exists());
 
-        mockMvc.perform(get(String.format("/account/%s/tasks/assigned", account2Id))
+        mockMvc.perform(get("/api/account/tasks/assigned")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpectAll(jsonPath(String.format("$.tasks[?(@.id == %s)]", taskId)).exists(),
                 jsonPath("$.count").value(1));
 
         // Deleting task and checking that all assignments and subscriptions also get deleted
-        mockMvc.perform(delete(String.format("/task/%s", taskId))
+        mockMvc.perform(delete(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/account/%s/tasks/assigned", account2Id))
+        mockMvc.perform(get("/api/account/tasks/assigned")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(jsonPath("$.tasks").isEmpty());
-        mockMvc.perform(get(String.format("/account/%s/tasks/subscribed", account2Id))
+        mockMvc.perform(get("/api/account/tasks/subscribed")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(jsonPath("$.tasks").isEmpty());
     }
@@ -516,79 +516,79 @@ public class TaskIT extends AbstractIT {
         String account2Id = utils.createAccount();
         JwtToken account2Token = utils.getToken(account2Id);
 
-        String taskId = mockMvc.perform(post("/task/create")
+        String taskId = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", listId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
         // Trying to subscribe from an account that's not in group => error
-        mockMvc.perform(post(String.format("/task/%s/subscriber", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/subscriber", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isUnauthorized());
 
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", account1Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", account2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
         // Restricting list access to account2
-        mockMvc.perform(post(String.format("/list/%s/accounts", listId))
+        mockMvc.perform(post(String.format("/api/list/%s/accounts", listId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("{\"values\": %s}", numericList(account2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isOk());
 
         // Trying to subscribe from an account that's got no access to the list => error
-        mockMvc.perform(post(String.format("/task/%s/subscriber", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/subscriber", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isUnauthorized());
 
         // Removing special access from the list
-        mockMvc.perform(post(String.format("/list/%s/accounts", listId))
+        mockMvc.perform(post(String.format("/api/list/%s/accounts", listId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"values\": []}")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isOk());
 
         // Subscribing from account1 and account2, checking
-        mockMvc.perform(post(String.format("/task/%s/subscriber", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/subscriber", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(post(String.format("/task/%s/subscriber", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/subscriber", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s/subscribers", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s/subscribers", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).exists(),
                 jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).exists());
 
         // Unsubscribing from account1, checking
-        mockMvc.perform(delete(String.format("/task/%s/subscriber", taskId))
+        mockMvc.perform(delete(String.format("/api/task/%s/subscriber", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/task/%s/subscribers", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s/subscribers", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).doesNotExist(),
                 jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).exists());
 
         // Subscribing from account1 and account2 again
-        mockMvc.perform(post(String.format("/task/%s/subscriber", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/subscriber", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(post(String.format("/task/%s/subscriber", taskId))
+        mockMvc.perform(post(String.format("/api/task/%s/subscriber", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/task/%s/subscribers", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s/subscribers", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).exists(),
@@ -596,39 +596,39 @@ public class TaskIT extends AbstractIT {
 
 
         // Deleting account1, checking that it has been removed from the subscribers list
-        mockMvc.perform(delete(String.format("/account/%s", account1Id))
+        mockMvc.perform(delete("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/account/%s", account1Id))
+        mockMvc.perform(get("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/task/%s/subscribers", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s/subscribers", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.values[?(@.id == %s)].name", account1Id)).doesNotExist(),
                 jsonPath(String.format("$.values[?(@.id == %s)].name", account2Id)).exists());
 
-        mockMvc.perform(get(String.format("/account/%s/tasks/subscribed", account2Id))
+        mockMvc.perform(get("/api/account/tasks/subscribed")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpectAll(jsonPath(String.format("$.tasks[?(@.id == %s)]", taskId)).exists(),
                 jsonPath("$.count").value(1));
 
         // Deleting task and checking that all subscriptions have been removed as well
-        mockMvc.perform(delete(String.format("/task/%s", taskId))
+        mockMvc.perform(delete(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/account/%s", account2Id))
+        mockMvc.perform(get("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/account/%s/tasks/subscribed", account2Id))
+        mockMvc.perform(get("/api/account/tasks/subscribed")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(jsonPath("$.tasks").isEmpty());
     }
@@ -642,23 +642,43 @@ public class TaskIT extends AbstractIT {
         String groupId = utils.createGroup(ownerId, ownerToken);
         String listId = utils.createList(groupId, ownerToken);
 
-        String taskId = mockMvc.perform(post("/task/create")
+        String taskId = mockMvc.perform(post("/api/task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "task", "listId", listId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
+        String childTaskId = mockMvc.perform(post("/api/task/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("name", "task", "listId", listId, "parentId", taskId)))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(get(String.format("/task/%s", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s", taskId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(jsonPath("$.status").value(Task.Status.NOT_COMPLETED.name()));
+        mockMvc.perform(get(String.format("/api/task/%s", childTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(jsonPath("$.status").value(Task.Status.NOT_COMPLETED.name()));
 
-        mockMvc.perform(post(String.format("/task/%s/status", taskId))
+        // Trying to complete a task that has incomplete child tasks
+        mockMvc.perform(post(String.format("/api/task/%s/status", taskId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("status", Task.Status.COMPLETED.name())))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(status().isInternalServerError());
+
+        mockMvc.perform(post(String.format("/api/task/%s/status", childTaskId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("status", Task.Status.COMPLETED.name())))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(status().isOk());
+        mockMvc.perform(post(String.format("/api/task/%s/status", taskId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("status", Task.Status.COMPLETED.name())))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/task/%s", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(jsonPath("$.status").value(Task.Status.COMPLETED.name()));
     }

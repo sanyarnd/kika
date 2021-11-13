@@ -46,11 +46,11 @@ public class GroupIT extends AbstractIT {
 
         String groupId = utils.createGroup(ownerId, ownerToken);
 
-        mockMvc.perform(get(String.format("/group/%s", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(jsonPath("$.ownerId").value(ownerId));
 
-        mockMvc.perform(get(String.format("/group/%s/members", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s/members", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.members[?(@.id == %s)].role", ownerId)).value(AccountRole.Role.OWNER.name()));
@@ -65,13 +65,13 @@ public class GroupIT extends AbstractIT {
 
         String groupId = utils.createGroup(ownerId, ownerToken);
 
-        mockMvc.perform(post(String.format("/group/%s/rename", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/rename", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("value", "kate's group")))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/group/%s", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(status().isOk(),
                 jsonPath("$.name").value("kate's group"),
@@ -93,31 +93,31 @@ public class GroupIT extends AbstractIT {
         String listId = utils.createList(groupId, ownerToken);
         String taskId = utils.createTask(listId, ownerToken);
 
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", accountId, "role", AccountRole.Role.MEMBER.name())))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(delete(String.format("/group/%s", groupId))
+        mockMvc.perform(delete(String.format("/api/group/%s", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/group/%s", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/account/%s", ownerId))
+        mockMvc.perform(get("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/account/%s", accountId))
+        mockMvc.perform(get("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, accountToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/list/%s", listId))
+        mockMvc.perform(get(String.format("/api/list/%s", listId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
-        mockMvc.perform(get(String.format("/task/%s", taskId))
+        mockMvc.perform(get(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
     }
@@ -138,27 +138,27 @@ public class GroupIT extends AbstractIT {
         String groupId = utils.createGroup(ownerId, ownerToken);
 
         // Trying to add a member with "OWNER" role => error
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", account1Id, "role", AccountRole.Role.OWNER.name())))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
         // Trying to change a non-member's role => error
-        mockMvc.perform(post(String.format("/group/%s/member/%s/role", groupId, account2Id))
+        mockMvc.perform(post(String.format("/api/group/%s/member/%s/role", groupId, account2Id))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("role", AccountRole.Role.MEMBER.name())))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(status().isInternalServerError());
 
         // Adding a member with "RESTRICTED" (read-only) role => success
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", account1Id, "role", AccountRole.Role.RESTRICTED.name())))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/group/%s/members", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s/members", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.members[?(@.id == %s)].role", ownerId)).value(AccountRole.Role.OWNER.name()),
@@ -166,24 +166,24 @@ public class GroupIT extends AbstractIT {
                     AccountRole.Role.RESTRICTED.name()));
 
         // Trying to add a member through a non-owner account => error
-        mockMvc.perform(post(String.format("/group/%s/member/%s/role", groupId, account2Id))
+        mockMvc.perform(post(String.format("/api/group/%s/member/%s/role", groupId, account2Id))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("role", AccountRole.Role.MEMBER.name())))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(status().isUnauthorized());
 
         // Making restricted member an owner => success, previous owner is now a regular member
-        mockMvc.perform(post(String.format("/group/%s/owner", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/owner", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("value", account1Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(status().isOk());
 
-        mockMvc.perform(get(String.format("/group/%s", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(jsonPath("ownerId").value(account1Id));
 
-        mockMvc.perform(get(String.format("/group/%s/members", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s/members", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.members[?(@.id == %s)].role", ownerId)).value(AccountRole.Role.MEMBER.name()),
@@ -191,20 +191,20 @@ public class GroupIT extends AbstractIT {
                     AccountRole.Role.OWNER.name()));
 
         // Trying to change owner's role to regular member's one => error
-        mockMvc.perform(post(String.format("/group/%s/member/%s/role", groupId, account1Id))
+        mockMvc.perform(post(String.format("/api/group/%s/member/%s/role", groupId, account1Id))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("role", AccountRole.Role.MEMBER.name())))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(status().isInternalServerError());
 
         // Changing former owner's role to restricted => success
-        mockMvc.perform(post(String.format("/group/%s/member/%s/role", groupId, ownerId))
+        mockMvc.perform(post(String.format("/api/group/%s/member/%s/role", groupId, ownerId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("role", AccountRole.Role.RESTRICTED.name())))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(status().isOk());
 
-        mockMvc.perform(get(String.format("/account/%s/groups", ownerId))
+        mockMvc.perform(get("/api/account/groups")
             .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.groups[?(@.id == %s)].role", groupId)).value(
@@ -225,7 +225,7 @@ public class GroupIT extends AbstractIT {
         JwtToken account2Token = utils.getToken(account2Id);
 
         String groupId = utils.createGroup(ownerId, ownerToken);
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", account1Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
@@ -233,7 +233,7 @@ public class GroupIT extends AbstractIT {
 
         // List1, owner and account1 have access to it
         String list1Id = utils.createList(groupId, ownerToken);
-        mockMvc.perform(post(String.format("/list/%s/accounts", list1Id))
+        mockMvc.perform(post(String.format("/api/list/%s/accounts", list1Id))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("{\"values\": %s}", numericList(account1Id, ownerId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
@@ -241,41 +241,41 @@ public class GroupIT extends AbstractIT {
 
         // List2, only account1 has access to it
         String list2Id = utils.createList(groupId, ownerToken);
-        mockMvc.perform(post(String.format("/list/%s/accounts", list2Id))
+        mockMvc.perform(post(String.format("/api/list/%s/accounts", list2Id))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("{\"values\": %s}", numericList(account1Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
 
         // Trying to exclude from group an account that is not its member => error
-        mockMvc.perform(delete(String.format("/group/%s/member/%s", groupId, account2Id))
+        mockMvc.perform(delete(String.format("/api/group/%s/member/%s", groupId, account2Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
         // Trying to exclude from group through a non-member account => error
-        mockMvc.perform(delete(String.format("/group/%s/member/%s", groupId, account1Id))
+        mockMvc.perform(delete(String.format("/api/group/%s/member/%s", groupId, account1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isUnauthorized());
 
         // Trying to exclude owner from group => error
-        mockMvc.perform(delete(String.format("/group/%s/member/%s", groupId, ownerId))
+        mockMvc.perform(delete(String.format("/api/group/%s/member/%s", groupId, ownerId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
         // Trying to exclude a regular member => success
-        mockMvc.perform(delete(String.format("/group/%s/member/%s", groupId, account1Id))
+        mockMvc.perform(delete(String.format("/api/group/%s/member/%s", groupId, account1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
         // Owner still has access to list1, but account1 does not anymore
-        mockMvc.perform(get(String.format("/list/%s/accounts", list1Id))
+        mockMvc.perform(get(String.format("/api/list/%s/accounts", list1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", ownerId)).exists(),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account1Id)).doesNotExist());
 
         // List2 gets deleted when account1 is excluded from the group
-        mockMvc.perform(get(String.format("/list/%s", list2Id))
+        mockMvc.perform(get(String.format("/api/list/%s", list2Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
     }

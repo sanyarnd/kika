@@ -49,34 +49,34 @@ public class GroupMessageIT extends AbstractIT {
         String account2Id = utils.createAccount();
         JwtToken account2Token = utils.getToken(account2Id);
 
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", account1Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
         // Sending a message from an account that's not in the group => error
-        mockMvc.perform(post(String.format("/group/%s/message", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/message", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("value", "New group message")))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isUnauthorized());
 
         // Sending a message from a member account => success
-        String messageId = mockMvc.perform(post(String.format("/group/%s/message", groupId))
+        String messageId = mockMvc.perform(post(String.format("/api/group/%s/message", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("value", "New group message")))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(get(String.format("/message/%s", messageId))
+        mockMvc.perform(get(String.format("/api/message/%s", messageId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.id").value(messageId),
                 jsonPath("$.groupId").value(groupId),
                 jsonPath("$.body").value("New group message"));
 
-        mockMvc.perform(get(String.format("/group/%s/messages", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s/messages", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.messages[?(@.id == %s)].groupId", messageId)).value(
@@ -99,62 +99,62 @@ public class GroupMessageIT extends AbstractIT {
         String account2Id = utils.createAccount();
         JwtToken account2Token = utils.getToken(account2Id);
 
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", account1Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        String message1Id = mockMvc.perform(post(String.format("/group/%s/message", groupId))
+        String message1Id = mockMvc.perform(post(String.format("/api/group/%s/message", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("value", "New group message1")))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
-        String message2Id = mockMvc.perform(post(String.format("/group/%s/message", groupId))
+        String message2Id = mockMvc.perform(post(String.format("/api/group/%s/message", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("value", "New group message2")))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
-        mockMvc.perform(get(String.format("/group/%s/messages", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s/messages", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.messages[?(@.id == %s)]", message1Id)).exists(),
                 jsonPath(String.format("$.messages[?(@.id == %s)]", message2Id)).exists());
 
         // Trying to delete a message from account that's not in the group => error
-        mockMvc.perform(delete(String.format("/message/%s", message1Id))
+        mockMvc.perform(delete(String.format("/api/message/%s", message1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isUnauthorized());
 
         // Deleting a message from a different account than the on it was created from => success
-        mockMvc.perform(delete(String.format("/message/%s", message1Id))
+        mockMvc.perform(delete(String.format("/api/message/%s", message1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/group/%s/messages", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s/messages", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.messages[?(@.id == %s)]", message1Id)).doesNotExist(),
                 jsonPath(String.format("$.messages[?(@.id == %s)]", message2Id)).exists());
 
         // Deleting account does not affect messages that were created from it
-        mockMvc.perform(delete(String.format("/account/%s", account1Id))
+        mockMvc.perform(delete("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/group/%s/messages", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s/messages", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.messages[?(@.id == %s)]", message2Id)).exists());
 
         // Deleting a group erases all of its messages
-        mockMvc.perform(delete(String.format("/group/%s", groupId))
+        mockMvc.perform(delete(String.format("/api/group/%s", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/group/%s", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
-        mockMvc.perform(get(String.format("/message/%s", message2Id))
+        mockMvc.perform(get(String.format("/api/message/%s", message2Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
     }

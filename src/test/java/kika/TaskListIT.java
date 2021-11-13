@@ -44,7 +44,7 @@ public class TaskListIT extends AbstractIT {
         JwtToken ownerToken = utils.getToken(ownerId);
         String groupId = utils.createGroup(ownerId, ownerToken);
 
-        mockMvc.perform(post("/list/create")
+        mockMvc.perform(post("/api/list/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "list", "groupId", groupId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
@@ -59,19 +59,19 @@ public class TaskListIT extends AbstractIT {
         JwtToken ownerToken = utils.getToken(ownerId);
         String groupId = utils.createGroup(ownerId, ownerToken);
 
-        String listId = mockMvc.perform(post("/list/create")
+        String listId = mockMvc.perform(post("/api/list/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "list", "groupId", groupId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(post(String.format("/list/%s/rename", listId))
+        mockMvc.perform(post(String.format("/api/list/%s/rename", listId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("value", "kate's list")))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/list/%s", listId))
+        mockMvc.perform(get(String.format("/api/list/%s", listId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.childrenIds").isEmpty(),
                 jsonPath("$.parentId").isEmpty(),
@@ -86,25 +86,25 @@ public class TaskListIT extends AbstractIT {
         JwtToken ownerToken = utils.getToken(ownerId);
         String groupId = utils.createGroup(ownerId, ownerToken);
 
-        String parentListId = mockMvc.perform(post("/list/create")
+        String parentListId = mockMvc.perform(post("/api/list/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "list", "groupId", groupId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(delete(String.format("/list/%s", parentListId))
+        mockMvc.perform(delete(String.format("/api/list/%s", parentListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/list/%s", parentListId))
+        mockMvc.perform(get(String.format("/api/list/%s", parentListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/group/%s", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/account/%s", ownerId))
+        mockMvc.perform(get("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
     }
@@ -117,50 +117,50 @@ public class TaskListIT extends AbstractIT {
         JwtToken ownerToken = utils.getToken(ownerId);
         String groupId = utils.createGroup(ownerId, ownerToken);
 
-        String parentListId = mockMvc.perform(post("/list/create")
+        String parentListId = mockMvc.perform(post("/api/list/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "list", "groupId", groupId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
-        String childList1Id = mockMvc.perform(post("/list/create")
+        String childList1Id = mockMvc.perform(post("/api/list/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "list", "groupId", groupId, "parentId", parentListId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
-        String childList2Id = mockMvc.perform(post("/list/create")
+        String childList2Id = mockMvc.perform(post("/api/list/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "list", "groupId", groupId, "parentId", parentListId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(delete(String.format("/list/%s", childList1Id))
+        mockMvc.perform(delete(String.format("/api/list/%s", childList1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/list/%s", childList1Id))
+        mockMvc.perform(get(String.format("/api/list/%s", childList1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/list/%s", parentListId))
+        mockMvc.perform(get(String.format("/api/list/%s", parentListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(get(String.format("/list/%s", childList2Id))
-                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
-            .andExpect(status().isOk());
-
-        mockMvc.perform(delete(String.format("/list/%s", parentListId))
+        mockMvc.perform(get(String.format("/api/list/%s", childList2Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/list/%s", parentListId))
+        mockMvc.perform(delete(String.format("/api/list/%s", parentListId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get(String.format("/api/list/%s", parentListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
-        mockMvc.perform(get(String.format("/list/%s", childList2Id))
+        mockMvc.perform(get(String.format("/api/list/%s", childList2Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
 
-        mockMvc.perform(get(String.format("/group/%s", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
     }
@@ -179,18 +179,18 @@ public class TaskListIT extends AbstractIT {
         JwtToken account2Token = utils.getToken(account2Id);
 
         // Add the other two accounts to the group
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", account1Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
-        mockMvc.perform(post(String.format("/group/%s/member", groupId))
+        mockMvc.perform(post(String.format("/api/group/%s/member", groupId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("id", account2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/group/%s/members", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s/members", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(3),
                 jsonPath(String.format("$.members[?(@.id == %s)].role", ownerId)).value(AccountRole.Role.OWNER.name()),
@@ -200,24 +200,24 @@ public class TaskListIT extends AbstractIT {
                     AccountRole.Role.MEMBER.name()));
 
         // Create a list with a child, check that both have full access
-        String parentListId = mockMvc.perform(post("/list/create")
+        String parentListId = mockMvc.perform(post("/api/list/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "list", "groupId", groupId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
-        String childListId = mockMvc.perform(post("/list/create")
+        String childListId = mockMvc.perform(post("/api/list/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(writeJson(Map.of("name", "list", "groupId", groupId, "parentId", parentListId)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(get(String.format("/list/%s/accounts", parentListId))
+        mockMvc.perform(get(String.format("/api/list/%s/accounts", parentListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(3),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", ownerId)).exists(),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account1Id)).exists(),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
-        mockMvc.perform(get(String.format("/list/%s/accounts", childListId))
+        mockMvc.perform(get(String.format("/api/list/%s/accounts", childListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(3),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", ownerId)).exists(),
@@ -225,17 +225,17 @@ public class TaskListIT extends AbstractIT {
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
 
         // Check for access from account side
-        mockMvc.perform(get(String.format("/account/%s/group/%s/lists", ownerId, groupId))
+        mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).exists());
-        mockMvc.perform(get(String.format("/account/%s/group/%s/lists", account1Id, groupId))
+        mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).exists());
-        mockMvc.perform(get(String.format("/account/%s/group/%s/lists", account2Id, groupId))
+        mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
@@ -245,147 +245,147 @@ public class TaskListIT extends AbstractIT {
         String task1Id = utils.createTask(parentListId, ownerToken);
         String task2Id = utils.createTask(childListId, ownerToken);
 
-        mockMvc.perform(get(String.format("/task/%s", task1Id))
+        mockMvc.perform(get(String.format("/api/task/%s", task1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(jsonPath("$.listId").value(parentListId));
-        mockMvc.perform(get(String.format("/task/%s", task2Id))
+        mockMvc.perform(get(String.format("/api/task/%s", task2Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(jsonPath("$.listId").value(childListId));
 
         // Restrict parent list's access to account1 and account2, check
         // Also check that excluding yourself is possible
-        mockMvc.perform(post(String.format("/list/%s/accounts", parentListId))
+        mockMvc.perform(post(String.format("/api/list/%s/accounts", parentListId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("{\"values\": %s}", numericList(account1Id, account2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
         // From account side
-        mockMvc.perform(get(String.format("/account/%s/group/%s/lists", ownerId, groupId))
+        mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).doesNotExist());
-        mockMvc.perform(get(String.format("/account/%s/group/%s/lists", account1Id, groupId))
+        mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).exists());
-        mockMvc.perform(get(String.format("/account/%s/group/%s/lists", account2Id, groupId))
+        mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).exists());
 
         // Check that adding the same accounts twice does not cause errors
-        mockMvc.perform(post(String.format("/list/%s/accounts", parentListId))
+        mockMvc.perform(post(String.format("/api/list/%s/accounts", parentListId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("{\"values\": %s}", numericList(account1Id, account2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/list/%s/accounts", parentListId))
+        mockMvc.perform(get(String.format("/api/list/%s/accounts", parentListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account1Id)).exists(),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
 
         // ...but is not possible from an account that has no access
-        mockMvc.perform(post(String.format("/list/%s/accounts", parentListId))
+        mockMvc.perform(post(String.format("/api/list/%s/accounts", parentListId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("{\"values\": %s}", numericList(account1Id, account2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isUnauthorized());
 
         // Check that child has inherited access rights
-        mockMvc.perform(get(String.format("/list/%s/accounts", childListId))
+        mockMvc.perform(get(String.format("/api/list/%s/accounts", childListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account1Id)).exists(),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
-        mockMvc.perform(get(String.format("/list/%s/accounts", childListId))
+        mockMvc.perform(get(String.format("/api/list/%s/accounts", childListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isUnauthorized());
 
         // From account side
-        mockMvc.perform(get(String.format("/account/%s/group/%s/lists", ownerId, groupId))
+        mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).doesNotExist(),
                 jsonPath("$.count").value(0));
 
         // Restrict child list's access to account2, check
-        mockMvc.perform(post(String.format("/list/%s/accounts", childListId))
+        mockMvc.perform(post(String.format("/api/list/%s/accounts", childListId))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("{\"values\": %s}", numericList(account2Id)))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/list/%s/accounts", childListId))
+        mockMvc.perform(get(String.format("/api/list/%s/accounts", childListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(1),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
 
         // From account side
-        mockMvc.perform(get(String.format("/account/%s/group/%s/lists", account1Id, groupId))
+        mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).doesNotExist());
-        mockMvc.perform(get(String.format("/account/%s/group/%s/lists", account2Id, groupId))
+        mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).exists());
 
         // Check that account1 still has access to parent list
-        mockMvc.perform(get(String.format("/list/%s/accounts", parentListId))
+        mockMvc.perform(get(String.format("/api/list/%s/accounts", parentListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(2),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account1Id)).exists(),
                 jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
 
         // From account side
-        mockMvc.perform(get(String.format("/account/%s/group/%s/lists", account1Id, groupId))
+        mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).exists(),
                 jsonPath("$.count").value(1));
 
         // Delete account2 and check that child list also gets deleted along with its task
         // (because only account2 has access to it)
-        mockMvc.perform(delete(String.format("/account/%s", account2Id))
+        mockMvc.perform(delete("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/account/%s", account2Id))
+        mockMvc.perform(get("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
             .andExpect(status().isInternalServerError());
-        mockMvc.perform(get(String.format("/list/%s", childListId))
+        mockMvc.perform(get(String.format("/api/list/%s", childListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isInternalServerError());
-        mockMvc.perform(get(String.format("/task/%s", task2Id))
+        mockMvc.perform(get(String.format("/api/task/%s", task2Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isInternalServerError());
 
         // Delete group owner account and check that group, parent list and its task also get deleted
-        mockMvc.perform(delete(String.format("/account/%s", ownerId))
+        mockMvc.perform(delete("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get(String.format("/account/%s", ownerId))
+        mockMvc.perform(get("/api/account")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(status().isInternalServerError());
-        mockMvc.perform(get(String.format("/group/%s", groupId))
+        mockMvc.perform(get(String.format("/api/group/%s", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isInternalServerError());
-        mockMvc.perform(get(String.format("/list/%s", parentListId))
+        mockMvc.perform(get(String.format("/api/list/%s", parentListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isInternalServerError());
-        mockMvc.perform(get(String.format("/task/%s", task1Id))
+        mockMvc.perform(get(String.format("/api/task/%s", task1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpect(status().isInternalServerError());
 
         // Account1 has no associated groups or lists
-        mockMvc.perform(get(String.format("/account/%s/groups", account1Id))
+        mockMvc.perform(get("/api/account/groups")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(jsonPath("$.count").value(0),
                 jsonPath("$.groups").isEmpty());
-        mockMvc.perform(get(String.format("/account/%s/group/%s/lists", account1Id, groupId))
+        mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
             .andExpectAll(jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).doesNotExist(),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).doesNotExist(),
