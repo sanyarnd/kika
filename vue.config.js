@@ -2,7 +2,8 @@
 const path = require("path");
 
 // https://cli.vuejs.org/guide/mode-and-env.html#using-env-variables-in-client-side-code
-process.env.VUE_APP_VERSION = require('./package.json').version
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+process.env.VUE_APP_VERSION = require("./package.json").version;
 
 module.exports = {
   pages: {
