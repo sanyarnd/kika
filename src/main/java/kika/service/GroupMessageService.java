@@ -1,5 +1,7 @@
 package kika.service;
 
+import java.util.Collection;
+import java.util.stream.Collectors;
 import kika.domain.Group;
 import kika.domain.GroupMessage;
 import kika.repository.GroupMessageRepository;
@@ -11,9 +13,6 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collection;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

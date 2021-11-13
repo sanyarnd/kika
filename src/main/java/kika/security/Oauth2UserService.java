@@ -1,5 +1,6 @@
 package kika.security;
 
+import java.util.Objects;
 import kika.domain.Account;
 import kika.repository.AccountRepository;
 import kika.security.principal.OAuth2Principal;
@@ -10,8 +11,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor

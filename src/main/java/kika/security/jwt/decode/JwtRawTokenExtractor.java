@@ -1,7 +1,7 @@
 package kika.security.jwt.decode;
 
-import org.jetbrains.annotations.Nullable;
 import javax.servlet.http.HttpServletRequest;
+import org.jetbrains.annotations.Nullable;
 
 @FunctionalInterface
 public interface JwtRawTokenExtractor {

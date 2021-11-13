@@ -1,9 +1,8 @@
 package kika.security.jwt.encode;
 
+import javax.servlet.http.Cookie;
 import kika.configuration.application.CookieProperties;
 import lombok.RequiredArgsConstructor;
-
-import javax.servlet.http.Cookie;
 
 @RequiredArgsConstructor
 public class JwtCookieService {

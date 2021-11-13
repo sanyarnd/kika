@@ -2,13 +2,12 @@ package kika.security.jwt.encode;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import kika.domain.Account;
-import lombok.RequiredArgsConstructor;
-
 import java.security.Key;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import kika.domain.Account;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class AccessTokenGenerator {
