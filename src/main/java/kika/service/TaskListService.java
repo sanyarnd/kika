@@ -50,8 +50,8 @@ public class TaskListService {
 
     private void checkGroupMemberPermission(KikaPrincipal principal, Group group) {
         if (group.getMembers().stream()
-            .noneMatch(member -> member.getAccount().safeId() == principal.accountId() &&
-                member.getRole() != AccountRole.Role.RESTRICTED)) {
+            .noneMatch(member -> member.getAccount().safeId() == principal.accountId()
+                && member.getRole() != AccountRole.Role.RESTRICTED)) {
             throw new BadCredentialsException("Not enough group permissons");
         }
     }
@@ -215,11 +215,11 @@ public class TaskListService {
                 return;
             }
         }
-//        else if (membersWithAccessIds.size() == accountsWithPotentialAccess.getAccounts().size() &&
-//            accountsWithPotentialAccess.getAccounts().stream().map(AccountWithAccess::getId).collect(Collectors.toSet())
-//                .containsAll(membersWithAccessIds)) {
-//            return;
-//        }
+//      else if (membersWithAccessIds.size() == accountsWithPotentialAccess.getAccounts().size() &&
+//          accountsWithPotentialAccess.getAccounts().stream().map(AccountWithAccess::getId).collect(Collectors.toSet())
+//              .containsAll(membersWithAccessIds)) {
+//          return;
+//      }
         if (!membersWithAccessIds.isEmpty()) {
             if (!accountsWithPotentialAccess.getAccounts().stream()
                 .map(AccountWithAccess::getId)

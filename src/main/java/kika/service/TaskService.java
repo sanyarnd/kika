@@ -68,8 +68,8 @@ public class TaskService {
 
     private void checkGroupMemberPermission(KikaPrincipal principal, Group group) {
         if (group.getMembers().stream()
-            .noneMatch(member -> member.getAccount().safeId() == principal.accountId() &&
-                member.getRole() != AccountRole.Role.RESTRICTED)) {
+            .noneMatch(member -> member.getAccount().safeId() == principal.accountId()
+                && member.getRole() != AccountRole.Role.RESTRICTED)) {
             throw new BadCredentialsException("Not enough group permissons");
         }
     }
@@ -205,8 +205,8 @@ public class TaskService {
     @Transactional
     public void setStatus(long id, @NotNull Task.Status status, KikaPrincipal principal) {
         Task task = taskRepository.getById(id);
-        if (status == Task.Status.COMPLETED &&
-            task.getChildren().stream().anyMatch(child -> child.getStatus() == Task.Status.NOT_COMPLETED)) {
+        if (status == Task.Status.COMPLETED
+            && task.getChildren().stream().anyMatch(child -> child.getStatus() == Task.Status.NOT_COMPLETED)) {
             throw new IllegalArgumentException(
                 "Task (id=%d) can't be completed: there are incomplete child tasks".formatted(id));
         }

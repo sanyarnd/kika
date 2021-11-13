@@ -21,6 +21,7 @@ public class RefreshTokenGenerator {
         return new RefreshToken(bytesToString(bytes), clock.instant().plus(tokenLifetime));
     }
 
+    @SuppressWarnings("MagicNumber")
     private String bytesToString(byte[] bytes) {
         char[] chars = new char[bytes.length];
         for (int i = 0; i < bytes.length; ++i) {

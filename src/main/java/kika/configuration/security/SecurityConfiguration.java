@@ -24,7 +24,7 @@ import org.zalando.problem.spring.web.advice.security.SecurityProblemSupport;
 @RequiredArgsConstructor
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     public static final String ACCESS_TOKEN_COOKIE_NAME = "X-Access-Token";
-    public static final String ACCESS_TOKEN_HEADER_NAME = "X-Access-Token";
+    public static final String ACCESS_TOKEN_HEADER_NAME = ACCESS_TOKEN_COOKIE_NAME;
     public static final String REFRESH_TOKEN_COOKIE_NAME = "X-Refresh-Token";
 
     private final SecurityProblemSupport problemSupport;
