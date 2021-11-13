@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @RestController
+@RequestMapping("/api")
+@Validated
 public class TaskController {
     private final TaskService service;
 

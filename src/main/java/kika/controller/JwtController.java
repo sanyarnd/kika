@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/login")
+@RequestMapping("/api")
 class JwtController {
     private final JwtTokenService jwtTokenService;
     private final JwtCookieService jwtCookieService;
 
-    @PostMapping("/refresh")
+    @PostMapping("/login/refresh")
     public void refresh(
         @RequestHeader(SecurityConfiguration.REFRESH_TOKEN_COOKIE_NAME) String refreshToken,
         HttpServletResponse response
