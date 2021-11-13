@@ -1,13 +1,14 @@
 package kika.service.dto;
 
-import java.util.Set;
+import java.util.List;
+import kika.controller.response.GetTaskListResponse;
 
 public record TaskListDto(
     long id,
     String name,
     Long parent,
     long group,
-    Set<Long> children,
-    Set<Long> tasks
+    List<GetTaskListResponse> children,
+    List<TaskDto> tasks
 ) {
 }

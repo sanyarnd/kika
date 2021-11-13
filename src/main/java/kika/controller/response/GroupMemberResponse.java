@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 public class GroupMemberResponse {
     private long id;
     private AccountRole.Role role;
+    private String name;
 }

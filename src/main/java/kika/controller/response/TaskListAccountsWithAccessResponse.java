@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TaskListAccountsWithAccessResponse {
-    private Collection<TaskListAccountWithAccessResponse> accounts;
+    private boolean set;
+    private Collection<AccountWithAccess> accounts;
     private long count;
 }

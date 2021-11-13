@@ -1,6 +1,5 @@
 package kika.controller.response;
 
-import java.util.Collection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,7 +7,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class GroupTaskListsResponse {
-    private Collection<GetTaskListResponse> lists;
-    private long count;
+public class AccountWithAccess {
+    private long id;
+    private String name;
+    private boolean hasAccess;
 }

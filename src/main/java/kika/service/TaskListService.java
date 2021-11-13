@@ -1,7 +1,25 @@
 package kika.service;
 
-import kika.domain.*;
-import kika.repository.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import kika.controller.request.EditTaskListRequest;
+import kika.controller.response.AccountWithAccess;
+import kika.controller.response.GetTaskListResponse;
+import kika.controller.response.TaskListSpecialAccessResponse;
+import kika.domain.Account;
+import kika.domain.AccountRole;
+import kika.domain.AccountSpecialAccess;
+import kika.domain.AutoPersistable;
+import kika.domain.Group;
+import kika.domain.Task;
+import kika.domain.TaskList;
+import kika.repository.AccountRepository;
+import kika.repository.AccountSpecialAccessRepository;
+import kika.repository.GroupRepository;
+import kika.repository.TaskListRepository;
+import kika.repository.TaskRepository;
 import kika.security.principal.KikaPrincipal;
 import kika.service.dto.TaskDto;
 import kika.service.dto.TaskListDto;
@@ -10,10 +28,6 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +57,8 @@ public class TaskListService {
     }
 
     private void checkListAccess(KikaPrincipal principal, TaskList list) {
-        if (!list.getSpecialAccess().isEmpty() && list.getSpecialAccess().stream()
+        Set<AccountSpecialAccess> specialAccess = list.getSpecialAccess();
+        if (!specialAccess.isEmpty() && specialAccess.stream()
             .map(accountSpecialAccess -> accountSpecialAccess.getAccount().safeId())
             .noneMatch(memberId -> memberId == principal.accountId())) {
             throw new BadCredentialsException("No access");
@@ -55,15 +70,55 @@ public class TaskListService {
         checkListAccess(principal, list);
     }
 
+    private List<TaskDto> getFullTaskTree(Task task) {
+        if (task.getChildren().isEmpty()) {
+            return List.of();
+        }
+        return task.getChildren().stream()
+            .map(child -> new TaskDto(child.safeId(),
+                child.getName(),
+                child.getDescription(),
+                child.getStatus(),
+                child.getParentId(),
+                child.getList().safeId(),
+                getFullTaskTree(child)))
+            .toList();
+    }
+
+    private List<GetTaskListResponse> getFullChildrenTree(TaskList list, long accId) {
+        if (list.getChildren().isEmpty()) {
+            return List.of();
+        }
+        return list.getChildren().stream().filter(child -> child.accountHasAccess(accId))
+            .map(child -> new GetTaskListResponse(child.safeId(),
+                child.getName(),
+                child.getParentId(),
+                child.getGroup().safeId(),
+                getFullChildrenTree(child, accId),
+                child.getTasks().stream()
+                    .map(task -> new TaskDto(task.safeId(),
+                        task.getName(),
+                        task.getDescription(),
+                        task.getStatus(),
+                        task.getParentId(),
+                        task.getList().safeId(),
+                        getFullTaskTree(task))).toList()))
+            .toList();
+    }
+
     @Transactional
-    public long create(String name, Long parentId, long groupId, KikaPrincipal principal) {
+    public long create(String name, Long parentId, long groupId, Set<Long> accessList, KikaPrincipal principal) {
         Group group = groupRepository.getById(groupId);
         checkGroupMemberPermission(principal, group);
         TaskList parent = parentId == null ? null : taskListRepository.getById(parentId);
         if (parent != null) {
             checkListAccess(principal, parent);
         }
-        return taskListRepository.save(new TaskList(name, parent, group)).safeId();
+        TaskList list = taskListRepository.saveAndFlush(new TaskList(name, parent, group));
+        if (accessList != null) {
+            setSpecialAccess(list.safeId(), accessList, principal);
+        }
+        return list.safeId();
     }
 
     @Transactional
@@ -78,30 +133,71 @@ public class TaskListService {
         TaskList list = taskListRepository.getById(id);
         runAccessChecks(principal, list);
         return new TaskListDto(id, list.getName(), list.getParentId(), list.getGroup().safeId(),
-            list.getChildren().stream().map(AutoPersistable::safeId).collect(Collectors.toSet()),
-            list.getTasks().stream().map(AutoPersistable::safeId).collect(Collectors.toSet()));
+            list.getChildren().stream().map(child -> new GetTaskListResponse(child.safeId(), child.getName(),
+                child.getParentId(),
+                child.getGroup().safeId(),
+                getFullChildrenTree(child, principal.accountId()),
+                child.getTasks().stream()
+                    .filter(task -> task.getParent() == null)
+                    .map(task -> new TaskDto(task.safeId(),
+                        task.getName(),
+                        task.getDescription(),
+                        task.getStatus(),
+                        task.getParentId(),
+                        task.getList().safeId(),
+                        getFullTaskTree(task)))
+                    .toList())).toList(),
+            list.getTasks().stream()
+                .filter(task -> task.getParent() == null)
+                .map(task -> new TaskDto(task.safeId(),
+                    task.getName(),
+                    task.getDescription(),
+                    task.getStatus(),
+                    task.getParentId(),
+                    task.getList().safeId(),
+                    getFullTaskTree(task)))
+                .toList());
+    }
+
+    private Set<Account> getParentAccessAccounts(TaskList list) {
+        if (list.getParent() == null) {
+            return list.getGroup().getMembers().stream().map(AccountRole::getAccount).collect(Collectors.toSet());
+        }
+
+        if (list.getParent().getSpecialAccess().isEmpty()) {
+            return getParentAccessAccounts(list.getParent());
+        } else {
+            return list.getParent().getSpecialAccess().stream().map(AccountSpecialAccess::getAccount).collect(
+                Collectors.toSet());
+        }
+
     }
 
     @Transactional
-    public Collection<Account> getAccountsWithAccess(long id, KikaPrincipal principal) {
+    public TaskListSpecialAccessResponse getAccountsWithAccess(long id, KikaPrincipal principal) {
         TaskList list = taskListRepository.getById(id);
         runAccessChecks(principal, list);
         Set<Account> accountsWithSpecialAccess =
             accountSpecialAccessRepository.getSpecialAccessAccountsByTaskListId(id).stream()
                 .map(AccountSpecialAccess::getAccount)
                 .collect(Collectors.toSet());
+        Set<Account> parentAccess = getParentAccessAccounts(list);
         if (!accountsWithSpecialAccess.isEmpty()) {
-            return accountsWithSpecialAccess;
+            // If there are access restrictions, return all accounts that have access plus all accounts
+            // that have access to the parent element
+            Set<Long> spAccIds = accountsWithSpecialAccess.stream()
+                .map(AutoPersistable::safeId).collect(Collectors.toSet());
+            return new TaskListSpecialAccessResponse(true, parentAccess.stream()
+                .filter(account -> !spAccIds.contains(account.safeId()))
+                .map(account -> new AccountWithAccess(account.safeId(), account.getName(), false))
+                .collect(Collectors.toCollection(() -> accountsWithSpecialAccess.stream()
+                    .map(acc -> new AccountWithAccess(acc.safeId(), acc.getName(), true))
+                    .collect(Collectors.toList()))));
         } else {
-            if (list.getParent() != null) {
-                accountsWithSpecialAccess = new HashSet<>(getAccountsWithAccess(list.getParentId(), principal));
-                if (!accountsWithSpecialAccess.isEmpty()) {
-                    return accountsWithSpecialAccess;
-                }
-            }
-            return taskListRepository.getById(id).getGroup().getMembers().stream()
-                .map(AccountRole::getAccount)
-                .collect(Collectors.toList());
+            // If there are no access restrictions, return all accounts that have access to the parent element
+            return new TaskListSpecialAccessResponse(false, parentAccess.stream()
+                .map(account -> new AccountWithAccess(account.safeId(), account.getName(), true))
+                .toList());
         }
     }
 
@@ -109,15 +205,24 @@ public class TaskListService {
     public void setSpecialAccess(long id, @NotNull Set<Long> membersWithAccessIds, KikaPrincipal principal) {
         TaskList list = taskListRepository.getById(id);
         runAccessChecks(principal, list);
-        Set<Account> accountsWithPotentialAccess = new HashSet<>(getAccountsWithAccess(id, principal));
-        if (membersWithAccessIds.size() == accountsWithPotentialAccess.size() &&
-            accountsWithPotentialAccess.stream().map(Account::safeId).collect(Collectors.toSet())
-                .containsAll(membersWithAccessIds)) {
-            return;
+        TaskListSpecialAccessResponse accountsWithPotentialAccess = getAccountsWithAccess(id, principal);
+        if (accountsWithPotentialAccess.isSet()) {
+            Set<Long> accs = accountsWithPotentialAccess.getAccounts().stream()
+                .filter(AccountWithAccess::isHasAccess)
+                .map(AccountWithAccess::getId)
+                .collect(Collectors.toSet());
+            if (membersWithAccessIds.size() == accs.size() && accs.containsAll(membersWithAccessIds)) {
+                return;
+            }
         }
+//        else if (membersWithAccessIds.size() == accountsWithPotentialAccess.getAccounts().size() &&
+//            accountsWithPotentialAccess.getAccounts().stream().map(AccountWithAccess::getId).collect(Collectors.toSet())
+//                .containsAll(membersWithAccessIds)) {
+//            return;
+//        }
         if (!membersWithAccessIds.isEmpty()) {
-            if (!accountsWithPotentialAccess.stream()
-                .map(Account::safeId)
+            if (!accountsWithPotentialAccess.getAccounts().stream()
+                .map(AccountWithAccess::getId)
                 .collect(Collectors.toSet())
                 .containsAll(membersWithAccessIds)) {
                 throw new IllegalArgumentException("The new access set must be a subset of the parent access set");
@@ -155,9 +260,23 @@ public class TaskListService {
         TaskList list = taskListRepository.getById(id);
         runAccessChecks(principal, list);
         return list.getTasks().stream()
+            .filter(task -> task.getParent() == null)
             .map(task -> new TaskDto(task.safeId(), task.getName(), task.getDescription(), task.getStatus(),
                 task.getParentId(), task.getList().safeId(),
-                task.getChildren().stream().map(AutoPersistable::safeId).collect(Collectors.toSet())))
+                getFullTaskTree(task)))
             .collect(Collectors.toSet());
+    }
+
+    @Transactional
+    public void edit(long id, EditTaskListRequest data, KikaPrincipal principal) {
+        TaskList list = taskListRepository.getById(id);
+        runAccessChecks(principal, list);
+        if (!Objects.equals(list.getName(), data.getName())) {
+            rename(id, data.getName(), principal);
+        }
+
+//        TODO: implement list move
+
+        setSpecialAccess(id, data.getAccessList(), principal);
     }
 }

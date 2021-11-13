@@ -1,18 +1,18 @@
 package kika.controller;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import kika.controller.request.AddGroupMemberRequest;
+import kika.controller.request.EditGroupRequest;
 import kika.controller.request.SetMemberRoleRequest;
 import kika.controller.request.SingleNonNullableNumericPropertyRequest;
 import kika.controller.request.SingleNonNullablePropertyRequest;
 import kika.controller.response.GetGroupMessageResponse;
 import kika.controller.response.GetGroupMessagesResponse;
 import kika.controller.response.GetGroupResponse;
+import kika.controller.response.GetTaskListResponse;
 import kika.controller.response.GroupMemberResponse;
 import kika.controller.response.GroupMembersResponse;
-import kika.controller.response.GroupTaskListResponse;
 import kika.controller.response.GroupTaskListsResponse;
 import kika.domain.Group;
 import kika.security.principal.KikaPrincipal;
@@ -63,18 +63,21 @@ public class GroupController {
     }
 
     @DeleteMapping("/group/{id}")
-    public void deleteGroup(@PathVariable long id,
-        @AuthenticationPrincipal KikaPrincipal principal) {
+    public void deleteGroup(
+        @PathVariable long id,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
         groupService.delete(id, principal);
     }
 
-//    @GetMapping("/group/{id}/lists")
-//    public GroupTaskListsResponse getGroupTaskLists(@PathVariable long id) {
-//        List<GroupTaskListResponse> taskLists = groupService.getTaskLists(id).stream()
-//            .map(list -> new GroupTaskListResponse(list.safeId(), list.getName()))
-//            .collect(Collectors.toList());
-//        return new GroupTaskListsResponse(taskLists, taskLists.size());
-//    }
+    @GetMapping("/group/{id}/lists")
+    public GroupTaskListsResponse getGroupTaskLists(
+        @PathVariable long id,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
+        List<GetTaskListResponse> taskLists = groupService.getTaskLists(id, principal);
+        return new GroupTaskListsResponse(taskLists, taskLists.size());
+    }
 
     @PostMapping("/group/{groupId}/owner")
     public void transferGroupOwnership(
@@ -86,24 +89,31 @@ public class GroupController {
     }
 
     @GetMapping("/group/{id}/members")
-    public GroupMembersResponse getGroupMembers(@PathVariable long id,
-        @AuthenticationPrincipal KikaPrincipal principal) {
+    public GroupMembersResponse getGroupMembers(
+        @PathVariable long id,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
         List<GroupMemberResponse> members = groupService.getMembers(id, principal)
             .stream()
-            .map(accountRole -> new GroupMemberResponse(accountRole.getId().getAccountId(), accountRole.getRole()))
+            .map(accountRole -> new GroupMemberResponse(accountRole.getId().getAccountId(), accountRole.getRole(),
+                accountRole.getAccount().getName()))
             .collect(Collectors.toList());
         return new GroupMembersResponse(members, members.size());
     }
 
     @PostMapping("/group/{groupId}/member")
-    public void addGroupMember(@PathVariable long groupId, @RequestBody AddGroupMemberRequest request,
-        @AuthenticationPrincipal KikaPrincipal principal) {
+    public void addGroupMember(
+        @PathVariable long groupId, @RequestBody AddGroupMemberRequest request,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
         groupService.addMember(groupId, request.getId(), request.getRole(), principal);
     }
 
     @DeleteMapping("/group/{groupId}/member/{memberId}")
-    public void removeMember(@PathVariable long groupId, @PathVariable long memberId,
-        @AuthenticationPrincipal KikaPrincipal principal) {
+    public void removeMember(
+        @PathVariable long groupId, @PathVariable long memberId,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
         groupService.removeMember(groupId, memberId, principal);
     }
 
@@ -117,12 +127,24 @@ public class GroupController {
     }
 
     @GetMapping("/group/{groupId}/messages")
-    public GetGroupMessagesResponse getGroupMessages(@PathVariable long groupId,
-        @AuthenticationPrincipal KikaPrincipal principal) {
-        Set<GetGroupMessageResponse> notifications = groupMessageService.getByGroup(groupId, principal).stream()
+    public GetGroupMessagesResponse getGroupMessages(
+        @PathVariable long groupId,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
+        List<GetGroupMessageResponse> notifications = groupMessageService.getByGroup(groupId, principal).stream()
             .map(message -> new GetGroupMessageResponse(message.id(), message.groupId(),
-                message.createdDate(), message.body()))
-            .collect(Collectors.toSet());
+                message.createdDate(), message.body(), message.sender()))
+            .sorted((o1, o2) -> Long.compare(o2.getId(), o1.getId()))
+            .collect(Collectors.toList());
         return new GetGroupMessagesResponse(notifications, notifications.size());
+    }
+
+    @PostMapping("/group/{id}/edit")
+    public void addGroupMembers(
+        @PathVariable long id,
+        @RequestBody EditGroupRequest request,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
+        groupService.edit(id, request.getName(), request.getMembers(), principal);
     }
 }

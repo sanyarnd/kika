@@ -1,6 +1,6 @@
 package kika.controller.response;
 
-import java.util.Set;
+import java.util.List;
 import kika.domain.Task;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,5 +16,5 @@ public class GetTaskResponse {
     private Task.Status status;
     private Long parentId;
     private long listId;
-    private Set<Long> childrenIds;
+    private List<GetTaskResponse> children;
 }

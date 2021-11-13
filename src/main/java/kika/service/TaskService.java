@@ -1,7 +1,21 @@
 package kika.service;
 
-import kika.domain.*;
-import kika.repository.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import kika.domain.Account;
+import kika.domain.AccountRole;
+import kika.domain.AccountTaskAssignee;
+import kika.domain.AccountTaskSubscriber;
+import kika.domain.Group;
+import kika.domain.Task;
+import kika.domain.TaskList;
+import kika.repository.AccountRepository;
+import kika.repository.AccountTaskAssigneeRepository;
+import kika.repository.AccountTaskSubscriberRepository;
+import kika.repository.TaskListRepository;
+import kika.repository.TaskRepository;
 import kika.security.principal.KikaPrincipal;
 import kika.service.dto.TaskDto;
 import lombok.RequiredArgsConstructor;
@@ -10,10 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +35,21 @@ public class TaskService {
     private final AccountTaskSubscriberRepository subscriberRepository;
 
     private final TaskListService taskListService;
+
+    private List<TaskDto> getFullTaskTree(Task task) {
+        if (task.getChildren().isEmpty()) {
+            return List.of();
+        }
+        return task.getChildren().stream()
+            .map(child -> new TaskDto(child.safeId(),
+                child.getName(),
+                child.getDescription(),
+                child.getStatus(),
+                child.getParentId(),
+                child.getList().safeId(),
+                getFullTaskTree(child)))
+            .toList();
+    }
 
     private void checkAccountAccess(Set<Account> accountsWithAccess, Account account, Task task) {
         if (!accountsWithAccess.contains(account)) {
@@ -58,6 +83,13 @@ public class TaskService {
     private void runAccessChecks(KikaPrincipal principal, TaskList list) {
         checkGroupMemberPermission(principal, list.getGroup());
         checkListAccess(principal, list);
+    }
+
+    private void propagateNotCompletedStatus(Task task) {
+        if (task.getParent() != null) {
+            task.getParent().setStatus(Task.Status.NOT_COMPLETED);
+            propagateNotCompletedStatus(task.getParent());
+        }
     }
 
     @Transactional
@@ -97,7 +129,7 @@ public class TaskService {
         checkListAccess(principal, task.getList());
         return new TaskDto(task.safeId(), task.getName(), task.getDescription(), task.getStatus(),
             task.getParentId(), task.getList().safeId(),
-            task.getChildren().stream().map(AutoPersistable::safeId).collect(Collectors.toSet()));
+            getFullTaskTree(task));
     }
 
     @Transactional
@@ -173,7 +205,15 @@ public class TaskService {
     @Transactional
     public void setStatus(long id, @NotNull Task.Status status, KikaPrincipal principal) {
         Task task = taskRepository.getById(id);
+        if (status == Task.Status.COMPLETED &&
+            task.getChildren().stream().anyMatch(child -> child.getStatus() == Task.Status.NOT_COMPLETED)) {
+            throw new IllegalArgumentException(
+                "Task (id=%d) can't be completed: there are incomplete child tasks".formatted(id));
+        }
         checkListAccess(principal, task.getList());
         task.setStatus(status);
+        if (status == Task.Status.NOT_COMPLETED) {
+            propagateNotCompletedStatus(task);
+        }
     }
 }

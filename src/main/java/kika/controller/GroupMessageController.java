@@ -38,7 +38,8 @@ public class GroupMessageController {
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
         GroupMessageDto message = service.get(id, principal);
-        return new GetGroupMessageResponse(message.id(), message.groupId(), message.createdDate(), message.body());
+        return new GetGroupMessageResponse(message.id(), message.groupId(), message.createdDate(), message.body(),
+            message.sender());
     }
 
     @DeleteMapping("/message/{messageId}")

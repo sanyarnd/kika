@@ -2,9 +2,11 @@ package kika.service.dto;
 
 import java.time.Instant;
 
-public record GroupMessageDto (
+public record GroupMessageDto(
     long id,
     long groupId,
     Instant createdDate,
-    String body
-) {}
+    String body,
+    String sender
+) {
+}

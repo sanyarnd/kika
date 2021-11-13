@@ -1,16 +1,32 @@
 package kika.controller;
 
-import kika.controller.request.*;
-import kika.controller.response.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import kika.controller.request.CreateTaskRequest;
+import kika.controller.request.MoveTaskRequest;
+import kika.controller.request.SetTaskStatusRequest;
+import kika.controller.request.SingleNonNullablePropertyRequest;
+import kika.controller.request.SingleNullableStringPropertyRequest;
+import kika.controller.response.GetTaskAssigneeResponse;
+import kika.controller.response.GetTaskAssigneesResponse;
+import kika.controller.response.GetTaskResponse;
+import kika.controller.response.GetTaskSubscriberResponse;
+import kika.controller.response.GetTaskSubscribersResponse;
 import kika.domain.Account;
 import kika.security.principal.KikaPrincipal;
 import kika.service.TaskService;
 import kika.service.dto.TaskDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-import java.util.Collection;
-import java.util.stream.Collectors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
@@ -24,7 +40,11 @@ public class TaskController {
         @RequestBody CreateTaskRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        return service.create(request.getName(), request.getDescription(), request.getListId(), request.getParentId(), principal);
+        return service.create(request.getName(),
+            request.getDescription(),
+            request.getListId(),
+            request.getParentId(),
+            principal);
     }
 
     @PostMapping("/task/{id}/rename")
@@ -43,6 +63,21 @@ public class TaskController {
         service.setDescription(id, request.getValue(), principal);
     }
 
+    private List<GetTaskResponse> getFullChildrenTree(TaskDto task) {
+        if (task.children().isEmpty()) {
+            return List.of();
+        }
+        return task.children().stream()
+            .map(child -> new GetTaskResponse(child.id(),
+                child.name(),
+                child.description(),
+                child.status(),
+                child.parentId(),
+                child.listId(),
+                getFullChildrenTree(child)))
+            .toList();
+    }
+
     @GetMapping("/task/{id}")
     public GetTaskResponse getTask(
         @PathVariable long id,
@@ -50,7 +85,7 @@ public class TaskController {
     ) {
         TaskDto task = service.get(id, principal);
         return new GetTaskResponse(task.id(), task.name(), task.description(), task.status(), task.parentId(),
-            task.listId(), task.children());
+            task.listId(), getFullChildrenTree(task));
     }
 
     @DeleteMapping("/task/{id}")

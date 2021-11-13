@@ -1,7 +1,7 @@
 package kika.service.dto;
 
+import java.util.List;
 import kika.domain.Task;
-import java.util.Set;
 
 public record TaskDto(
     long id,
@@ -10,6 +10,6 @@ public record TaskDto(
     Task.Status status,
     Long parentId,
     long listId,
-    Set<Long> children
+    List<TaskDto> children
 ) {
 }

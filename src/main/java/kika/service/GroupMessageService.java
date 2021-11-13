@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 import kika.domain.Group;
 import kika.domain.GroupMessage;
+import kika.repository.AccountRepository;
 import kika.repository.GroupMessageRepository;
 import kika.repository.GroupRepository;
 import kika.security.principal.KikaPrincipal;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class GroupMessageService {
     private final GroupMessageRepository groupMessageRepository;
     private final GroupRepository groupRepository;
+    private final AccountRepository accountRepository;
 
     private void checkMemberAccess(KikaPrincipal principal, Group group) {
         if (group.getMembers().stream()
@@ -46,7 +48,7 @@ public class GroupMessageService {
         checkMemberAccess(principal, group);
         return group.getMessages().stream()
             .map(message -> new GroupMessageDto(message.safeId(), message.getGroup().safeId(), message.getCreatedDate(),
-                message.getBody()))
+                message.getBody(), accountRepository.getById(Long.parseLong(message.getCreatedBy())).getName()))
             .collect(Collectors.toSet());
     }
 
@@ -55,7 +57,7 @@ public class GroupMessageService {
         GroupMessage message = groupMessageRepository.getById(id);
         checkMemberAccess(principal, message.getGroup());
         return new GroupMessageDto(message.safeId(), message.getGroup().safeId(), message.getCreatedDate(),
-            message.getBody());
+            message.getBody(), accountRepository.getById(Long.parseLong(message.getCreatedBy())).getName());
     }
 
     @Transactional

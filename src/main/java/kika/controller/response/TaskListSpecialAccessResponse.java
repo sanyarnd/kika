@@ -1,5 +1,6 @@
 package kika.controller.response;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TaskListAccountWithAccessResponse {
-    private long id;
-    private String name;
+public class TaskListSpecialAccessResponse {
+    private boolean set;
+    private List<AccountWithAccess> accounts;
 }

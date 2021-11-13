@@ -13,4 +13,5 @@ public class GetGroupMessageResponse {
     private long groupId;
     private Instant createdDate;
     private String body;
+    private String sender;
 }

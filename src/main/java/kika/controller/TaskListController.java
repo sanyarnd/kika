@@ -4,13 +4,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import kika.controller.request.CreateTaskListRequest;
+import kika.controller.request.EditTaskListRequest;
 import kika.controller.request.NumericPropertyListRequest;
 import kika.controller.request.SingleNonNullablePropertyRequest;
 import kika.controller.response.GetTaskListResponse;
 import kika.controller.response.GetTaskListTasksResponse;
 import kika.controller.response.GetTaskResponse;
-import kika.controller.response.TaskListAccountWithAccessResponse;
 import kika.controller.response.TaskListAccountsWithAccessResponse;
+import kika.controller.response.TaskListSpecialAccessResponse;
 import kika.security.principal.KikaPrincipal;
 import kika.service.TaskListService;
 import kika.service.dto.TaskDto;
@@ -38,7 +39,8 @@ public class TaskListController {
         @RequestBody CreateTaskListRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        return service.create(request.getName(), request.getParentId(), request.getGroupId(), principal);
+        return service.create(request.getName(), request.getParentId(), request.getGroupId(), request.getAccessList(),
+            principal);
     }
 
     @PostMapping("/list/{id}/rename")
@@ -55,7 +57,8 @@ public class TaskListController {
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
         TaskListDto taskList = service.get(id, principal);
-        return new GetTaskListResponse(taskList.id(), taskList.name(), taskList.parent(), taskList.children());
+        return new GetTaskListResponse(taskList.id(), taskList.name(), taskList.parent(), taskList.group(),
+            taskList.children(), taskList.tasks());
     }
 
     @DeleteMapping("/list/{id}")
@@ -79,11 +82,24 @@ public class TaskListController {
         @PathVariable long id,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        List<TaskListAccountWithAccessResponse> accountsWithAccess =
-            service.getAccountsWithAccess(id, principal).stream()
-                .map(account -> new TaskListAccountWithAccessResponse(account.safeId(), account.getName()))
-                .collect(Collectors.toList());
-        return new TaskListAccountsWithAccessResponse(accountsWithAccess, accountsWithAccess.size());
+        TaskListSpecialAccessResponse accountAccess = service.getAccountsWithAccess(id, principal);
+        return new TaskListAccountsWithAccessResponse(accountAccess.isSet(), accountAccess.getAccounts(),
+            accountAccess.getAccounts().size());
+    }
+
+    private List<GetTaskResponse> getFullChildrenTree(TaskDto task) {
+        if (task.children().isEmpty()) {
+            return List.of();
+        }
+        return task.children().stream()
+            .map(child -> new GetTaskResponse(child.id(),
+                child.name(),
+                child.description(),
+                child.status(),
+                child.parentId(),
+                child.listId(),
+                getFullChildrenTree(child)))
+            .toList();
     }
 
     @GetMapping("/list/{id}/tasks")
@@ -94,7 +110,16 @@ public class TaskListController {
         Set<TaskDto> tasks = service.getTasks(id, principal);
         return new GetTaskListTasksResponse(tasks.stream()
             .map(task -> new GetTaskResponse(task.id(), task.name(), task.description(),
-                task.status(), task.parentId(), task.listId(), task.children()))
+                task.status(), task.parentId(), task.listId(), getFullChildrenTree(task)))
             .collect(Collectors.toSet()), tasks.size());
+    }
+
+    @PostMapping("list/{id}/edit")
+    public void editList(
+        @PathVariable long id,
+        @RequestBody EditTaskListRequest data,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
+        service.edit(id, data, principal);
     }
 }

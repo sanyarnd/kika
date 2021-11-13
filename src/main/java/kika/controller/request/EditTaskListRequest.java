@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateTaskListRequest {
+public class EditTaskListRequest {
     @Length(min = 1, max = 128)
     private String name;
 
@@ -19,6 +19,5 @@ public class CreateTaskListRequest {
     @Nullable
     private Long parentId;
 
-    @Nullable
     private Set<Long> accessList;
 }
