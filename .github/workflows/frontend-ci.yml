@@ -1,0 +1,54 @@
+name: Vue Frontend CI
+
+on:
+  pull_request:
+    branches: [ master ]
+    paths:
+      - '.github/workflows/frontend-*'
+      - '.yarn/**'
+      - 'public/**'
+      - 'src/main/typescript/**'
+      - '.browserslistrc'
+      - '.eslintrc.js'
+      - '.yarnrc.yml'
+      - 'babel.config.js'
+      - 'package.json'
+      - 'tsconfig.json'
+      - 'vue.config.js'
+      - 'yarn.lock'
+  push:
+    branches: [ master ]
+    paths:
+      - '.github/workflows/frontend-*'
+      - '.yarn/**'
+      - 'public/**'
+      - 'src/main/typescript/**'
+      - '.browserslistrc'
+      - '.eslintrc.js'
+      - '.yarnrc.yml'
+      - 'babel.config.js'
+      - 'package.json'
+      - 'tsconfig.json'
+      - 'vue.config.js'
+      - 'yarn.lock'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          cache: 'yarn'
+
+      - name: Install Dependencies
+        run: yarn install --immutable
+
+      - name: Yarn Build
+        run: yarn build:prod
