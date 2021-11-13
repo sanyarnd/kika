@@ -47,7 +47,7 @@ jobs:
           node-version: '16'
 
       - name: Cache Dependencies
-      - uses: c-hive/gha-yarn-cache@v2
+        uses: c-hive/gha-yarn-cache@v2
 
       - name: Install Dependencies
         run: yarn install --immutable
