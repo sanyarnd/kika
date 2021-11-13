@@ -39,7 +39,7 @@ jobs:
         run: mvn package -Drevision=${REVISION}
 
       - name: Maven Integration Tests
-        run: mvn -DskipTests=true verify -Drevision=${REVISION}
+        run: mvn -DskipTests=true -DskipChecks verify -Drevision=${REVISION}
 
       - name: Store JAR file
         uses: actions/upload-artifact@v2
