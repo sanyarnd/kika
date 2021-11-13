@@ -1,10 +1,10 @@
 package kika.domain;
 
+import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -34,13 +34,19 @@ public class TaskList extends AutoPersistableAuditable {
     private Group group;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TaskList> children;
+    private Set<TaskList> children = new HashSet<>();
 
     @OneToMany(mappedBy = "list", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Task> tasks;
+    private Set<Task> tasks = new HashSet<>();
 
     @OneToMany(mappedBy = "taskList", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<AccountSpecialAccess> specialAccess;
+    private Set<AccountSpecialAccess> specialAccess = new HashSet<>();
+
+    public TaskList(String name, TaskList parent, Group group) {
+        this.name = name;
+        this.parent = parent;
+        this.group = group;
+    }
 
     public Long getParentId() {
         return parent == null ? null : parent.safeId();
@@ -58,11 +64,5 @@ public class TaskList extends AutoPersistableAuditable {
             return this.getSpecialAccess().stream()
                 .anyMatch(accountSpecialAccess -> accountSpecialAccess.getAccount().safeId() == accountId);
         }
-    }
-
-    public TaskList(String name, TaskList parent, Group group) {
-        this.name = name;
-        this.parent = parent;
-        this.group = group;
     }
 }
