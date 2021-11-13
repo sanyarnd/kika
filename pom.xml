@@ -17,7 +17,6 @@
     <properties>
         <revision>0.01</revision>
         <java.version>17</java.version>
-        <skipChecks>false</skipChecks>
 
         <jetbrains-annotations.version>22.0.0</jetbrains-annotations.version>
 
@@ -256,14 +255,13 @@
                 </dependencies>
                 <executions>
                     <execution>
-                        <phase>verify</phase>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <skip>${skipChecks}</skip>
                     <configLocation>checkstyle.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
                     <logViolationsToConsole>true</logViolationsToConsole>
@@ -275,7 +273,6 @@
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>${spotbugs-maven-plugin.version}</version>
                 <configuration>
-                    <skip>${skipChecks}</skip>
                     <excludeFilterFile>spotbugs-excludes.xml</excludeFilterFile>
                     <effort>Max</effort>
                     <xmlOutput>true</xmlOutput>
@@ -299,7 +296,7 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>verify</phase>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
