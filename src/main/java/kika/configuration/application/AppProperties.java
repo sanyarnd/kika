@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "kika", ignoreUnknownFields = false)
 public class AppProperties {
     private Jwt jwt;
+    private String authRedirectUrl;
 
     @Getter
     @RequiredArgsConstructor
