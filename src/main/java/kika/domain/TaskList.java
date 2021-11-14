@@ -65,4 +65,8 @@ public class TaskList extends AutoPersistableAuditable {
                 .anyMatch(accountSpecialAccess -> accountSpecialAccess.getAccount().safeId() == accountId);
         }
     }
+
+    public boolean hasChild(long listId) {
+        return this.getChildren().stream().anyMatch(child -> child.safeId() == listId || child.hasChild(listId));
+    }
 }

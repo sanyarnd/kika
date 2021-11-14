@@ -1,5 +1,6 @@
 package kika.controller;
 
+import javax.validation.Valid;
 import kika.controller.request.SingleBigNonNullablePropertyRequest;
 import kika.controller.response.GetGroupMessageResponse;
 import kika.security.principal.KikaPrincipal;
@@ -26,10 +27,10 @@ public class GroupMessageController {
     @PostMapping("/group/{groupId}/message")
     public long createGroupMessage(
         @PathVariable long groupId,
-        @RequestBody SingleBigNonNullablePropertyRequest request,
+        @RequestBody @Valid SingleBigNonNullablePropertyRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        return service.create(groupId, request.getValue(), principal);
+        return service.create(groupId, request.value(), principal);
     }
 
     @GetMapping("/message/{id}")
@@ -43,10 +44,7 @@ public class GroupMessageController {
     }
 
     @DeleteMapping("/message/{messageId}")
-    public void deleteGroupMessage(
-        @PathVariable long messageId,
-        @AuthenticationPrincipal KikaPrincipal principal
-    ) {
+    public void deleteGroupMessage(@PathVariable long messageId, @AuthenticationPrincipal KikaPrincipal principal) {
         service.delete(messageId, principal);
     }
 }

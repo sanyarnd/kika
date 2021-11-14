@@ -48,7 +48,7 @@ public class GroupMessageService {
         checkMemberAccess(principal, group);
         return group.getMessages().stream()
             .map(message -> new GroupMessageDto(message.safeId(), message.getGroup().safeId(), message.getCreatedDate(),
-                message.getBody(), accountRepository.getById(Long.parseLong(message.getCreatedBy())).getName()))
+                message.getBody(), accountRepository.getById(Long.valueOf(message.getCreatedBy())).getName()))
             .collect(Collectors.toSet());
     }
 
@@ -57,7 +57,7 @@ public class GroupMessageService {
         GroupMessage message = groupMessageRepository.getById(id);
         checkMemberAccess(principal, message.getGroup());
         return new GroupMessageDto(message.safeId(), message.getGroup().safeId(), message.getCreatedDate(),
-            message.getBody(), accountRepository.getById(Long.parseLong(message.getCreatedBy())).getName());
+            message.getBody(), accountRepository.getById(Long.valueOf(message.getCreatedBy())).getName());
     }
 
     @Transactional

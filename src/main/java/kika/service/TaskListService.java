@@ -1,5 +1,6 @@
 package kika.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -107,6 +108,7 @@ public class TaskListService {
     }
 
     @Transactional
+    @SuppressFBWarnings("CNC_COLLECTION_NAMING_CONFUSION")
     public long create(String name, Long parentId, long groupId, Set<Long> accessList, KikaPrincipal principal) {
         Group group = groupRepository.getById(groupId);
         checkGroupMemberPermission(principal, group);
@@ -229,7 +231,7 @@ public class TaskListService {
             }
             // Recursively revoke access from accounts from this list and all its children
             list.getSpecialAccess().stream()
-                .filter(accSpAcc -> membersWithAccessIds.contains(accSpAcc.getAccount().safeId()))
+                .filter(accSpAcc -> !membersWithAccessIds.contains(accSpAcc.getAccount().safeId()))
                 .forEach(accSpAcc -> revokeSpecialAccessRecursively(list.getSpecialAccess(),
                     accSpAcc.getAccount().safeId(), list.getChildren()));
             // Add access to accounts that do not have it yet
@@ -270,13 +272,31 @@ public class TaskListService {
     @Transactional
     public void edit(long id, EditTaskListRequest data, KikaPrincipal principal) {
         TaskList list = taskListRepository.getById(id);
-        runAccessChecks(principal, list);
-        if (!Objects.equals(list.getName(), data.getName())) {
-            rename(id, data.getName(), principal);
+        if (!Objects.equals(list.getName(), data.name())) {
+            rename(id, data.name(), principal);
         }
 
-//        TODO: implement list move
+        if (!Objects.equals(data.parentId(), list.getParentId())) {
+            move(id, data.parentId(), principal);
+        }
 
-        setSpecialAccess(id, data.getAccessList(), principal);
+        setSpecialAccess(id, data.accessList(), principal);
+    }
+
+    @Transactional
+    public void move(long id, Long parentId, KikaPrincipal principal) {
+        TaskList list = taskListRepository.getById(id);
+        runAccessChecks(principal, list);
+        if (parentId != null) {
+            TaskList newParent = taskListRepository.getById(parentId);
+            runAccessChecks(principal, newParent);
+            if (!list.hasChild(newParent.safeId())) {
+                list.setParent(newParent);
+            } else {
+                throw new IllegalArgumentException("List can not be moved into its own child");
+            }
+        } else {
+            list.setParent(null);
+        }
     }
 }

@@ -4,17 +4,14 @@ import javax.validation.constraints.NotNull;
 import kika.domain.AccountRole;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
 public class AddGroupMemberRequest {
-    @NotNull
     private long id;
 
     @NotNull
-    private AccountRole.Role role;
-
-    public AddGroupMemberRequest() {
-        role = AccountRole.Role.MEMBER;
-    }
+    private AccountRole.Role role = AccountRole.Role.MEMBER;
 }

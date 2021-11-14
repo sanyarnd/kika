@@ -1,23 +1,20 @@
 package kika.controller.request;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Set;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class EditTaskListRequest {
+public record EditTaskListRequest(
     @Length(min = 1, max = 128)
-    private String name;
-
-    private long groupId;
+    String name,
 
     @Nullable
-    private Long parentId;
+    Long parentId,
 
-    private Set<Long> accessList;
+    @NotNull
+    @SuppressFBWarnings("CNC_COLLECTION_NAMING_CONFUSION")
+    Set<Long> accessList
+) {
 }

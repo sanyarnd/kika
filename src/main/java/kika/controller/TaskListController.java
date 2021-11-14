@@ -3,8 +3,10 @@ package kika.controller;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 import kika.controller.request.CreateTaskListRequest;
 import kika.controller.request.EditTaskListRequest;
+import kika.controller.request.MoveListRequest;
 import kika.controller.request.NumericPropertyListRequest;
 import kika.controller.request.SingleNonNullablePropertyRequest;
 import kika.controller.response.GetTaskListResponse;
@@ -36,19 +38,20 @@ public class TaskListController {
 
     @PostMapping("/list/create")
     public long createList(
-        @RequestBody CreateTaskListRequest request,
+        @RequestBody @Valid CreateTaskListRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        return service.create(request.getName(), request.getParentId(), request.getGroupId(), request.getAccessList(),
+        return service.create(request.name(), request.parentId(), request.groupId(), request.accessList(),
             principal);
     }
 
     @PostMapping("/list/{id}/rename")
     public void renameList(
-        @PathVariable long id, @RequestBody SingleNonNullablePropertyRequest request,
+        @PathVariable long id,
+        @RequestBody @Valid SingleNonNullablePropertyRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        service.rename(id, request.getValue(), principal);
+        service.rename(id, request.value(), principal);
     }
 
     @GetMapping("/list/{id}")
@@ -71,10 +74,11 @@ public class TaskListController {
 
     @PostMapping("/list/{id}/accounts")
     public void setListAccess(
-        @PathVariable long id, @RequestBody NumericPropertyListRequest request,
+        @PathVariable long id,
+        @RequestBody @Valid NumericPropertyListRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        service.setSpecialAccess(id, request.getValues(), principal);
+        service.setSpecialAccess(id, request.values(), principal);
     }
 
     @GetMapping("/list/{id}/accounts")
@@ -117,9 +121,18 @@ public class TaskListController {
     @PostMapping("list/{id}/edit")
     public void editList(
         @PathVariable long id,
-        @RequestBody EditTaskListRequest data,
+        @RequestBody @Valid EditTaskListRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        service.edit(id, data, principal);
+        service.edit(id, request, principal);
+    }
+
+    @PostMapping("list/{id}/move")
+    public void editList(
+        @PathVariable long id,
+        @RequestBody @Valid MoveListRequest request,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
+        service.move(id, request.parentId(), principal);
     }
 }

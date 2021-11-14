@@ -3,6 +3,7 @@ package kika.controller;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 import kika.controller.request.SingleNonNullablePropertyRequest;
 import kika.controller.response.AccountGroupsResponse;
 import kika.controller.response.AccountTaskListResponse;
@@ -35,48 +36,33 @@ import org.springframework.web.bind.annotation.RestController;
 public class AccountController {
     private final AccountService service;
 
-//    @PostMapping("/account/register")
-//    @ResponseBody
-//    public Long registerAccount(@Valid @RequestBody RegisterAccountRequest request) {
-//        return service.register(request.getName());
-//    }
-
     @PostMapping("/account")
     public void renameAccount(
-        @RequestBody SingleNonNullablePropertyRequest request,
+        @RequestBody @Valid SingleNonNullablePropertyRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        service.rename(request.getValue(), principal);
+        service.rename(request.value(), principal);
     }
 
     @DeleteMapping(value = "/account")
-    public void deleteAccount(
-        @AuthenticationPrincipal KikaPrincipal principal
-    ) {
+    public void deleteAccount(@AuthenticationPrincipal KikaPrincipal principal) {
         service.delete(principal);
     }
 
     @GetMapping("/account")
-    public GetAccountResponse getAccount(
-        @AuthenticationPrincipal KikaPrincipal principal
-    ) {
+    public GetAccountResponse getAccount(@AuthenticationPrincipal KikaPrincipal principal) {
         AccountDto account = service.get(principal);
         return new GetAccountResponse(account.id(), account.name());
     }
 
     @GetMapping("/account/{id}")
-    public GetAccountResponse getAccountById(
-        @PathVariable long id,
-        @AuthenticationPrincipal KikaPrincipal principal
-    ) {
+    public GetAccountResponse getAccountById(@PathVariable long id, @AuthenticationPrincipal KikaPrincipal principal) {
         AccountDto account = service.getById(id, principal);
         return new GetAccountResponse(account.id(), account.name());
     }
 
     @GetMapping("/account/groups")
-    public AccountGroupsResponse getAccountGroups(
-        @AuthenticationPrincipal KikaPrincipal principal
-    ) {
+    public AccountGroupsResponse getAccountGroups(@AuthenticationPrincipal KikaPrincipal principal) {
         List<GroupDto> accountGroupList = service.getGroups(principal);
         return new AccountGroupsResponse(accountGroupList, accountGroupList.size());
     }
@@ -103,9 +89,7 @@ public class AccountController {
     }
 
     @GetMapping("/account/tasks/subscribed")
-    public GetSubscribedTasksResponse getAccountSubscribedTasks(
-        @AuthenticationPrincipal KikaPrincipal principal
-    ) {
+    public GetSubscribedTasksResponse getAccountSubscribedTasks(@AuthenticationPrincipal KikaPrincipal principal) {
         Set<Task> tasks = service.subscribedTasks(principal);
         return new GetSubscribedTasksResponse(tasks.stream()
             .map(task -> new GetSubscribedTaskResponse(task.safeId(), task.getName(), task.getStatus()))

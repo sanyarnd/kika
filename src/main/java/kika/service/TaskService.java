@@ -2,8 +2,10 @@ package kika.service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import kika.controller.request.EditTaskRequest;
 import kika.domain.Account;
 import kika.domain.AccountRole;
 import kika.domain.AccountTaskAssignee;
@@ -33,8 +35,6 @@ public class TaskService {
     private final AccountRepository accountRepository;
     private final AccountTaskAssigneeRepository assigneeRepository;
     private final AccountTaskSubscriberRepository subscriberRepository;
-
-    private final TaskListService taskListService;
 
     private List<TaskDto> getFullTaskTree(Task task) {
         if (task.getChildren().isEmpty()) {
@@ -143,13 +143,17 @@ public class TaskService {
     public void move(long taskId, @Nullable Long listId, @Nullable Long parentId, KikaPrincipal principal) {
         Task task = taskRepository.getById(taskId);
         runAccessChecks(principal, task.getList());
-        if (listId != null && task.getList().safeId() != listId) {
-            TaskList list = taskListRepository.getById(listId);
-            task.setParent(null);
-            task.setList(list);
-            task.moveChildrenIntoList(list);
+        if (listId != null) {
+            if (task.getList().safeId() != listId) {
+                TaskList list = taskListRepository.getById(listId);
+                task.setParent(null);
+                task.setList(list);
+                task.moveChildrenIntoList(list);
+            }
         }
-        if (parentId != null) {
+        if (parentId == null) {
+            task.setParent(null);
+        } else {
             Task parent = taskRepository.getById(parentId);
             checkTaskListAndParent(listId != null ? listId : task.getList().safeId(), parent);
             task.setParent(parent);
@@ -215,5 +219,18 @@ public class TaskService {
         if (status == Task.Status.NOT_COMPLETED) {
             propagateNotCompletedStatus(task);
         }
+    }
+
+    @Transactional
+    public void edit(long id, EditTaskRequest request, KikaPrincipal principal) {
+        Task task = taskRepository.getById(id);
+        if (!Objects.equals(request.name(), task.getName())) {
+            rename(id, request.name(), principal);
+        }
+        if (!Objects.equals(task.getDescription(), request.description())) {
+            setDescription(id, request.description(), principal);
+        }
+
+        move(id, request.listId(), request.parentId(), principal);
     }
 }

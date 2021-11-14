@@ -2,6 +2,7 @@ package kika.controller;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 import kika.controller.request.AddGroupMemberRequest;
 import kika.controller.request.EditGroupRequest;
 import kika.controller.request.SetMemberRoleRequest;
@@ -39,34 +40,29 @@ public class GroupController {
 
     @PostMapping("/group/create")
     public Long createGroup(
-        @RequestBody SingleNonNullablePropertyRequest request,
+        @RequestBody @Valid SingleNonNullablePropertyRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        return groupService.create(request.getValue(), principal);
+        return groupService.create(request.value(), principal);
     }
 
     @GetMapping("/group/{id}")
-    public GetGroupResponse getGroup(
-        @PathVariable long id,
-        @AuthenticationPrincipal KikaPrincipal principal
-    ) {
+    public GetGroupResponse getGroup(@PathVariable long id, @AuthenticationPrincipal KikaPrincipal principal) {
         Group group = groupService.get(id, principal);
         return new GetGroupResponse(group.getName(), group.getOwner().safeId(), group.getOwner().getName());
     }
 
     @PostMapping("/group/{id}/rename")
     public void renameGroup(
-        @PathVariable long id, @RequestBody SingleNonNullablePropertyRequest request,
+        @PathVariable long id,
+        @RequestBody @Valid SingleNonNullablePropertyRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        groupService.rename(id, request.getValue(), principal);
+        groupService.rename(id, request.value(), principal);
     }
 
     @DeleteMapping("/group/{id}")
-    public void deleteGroup(
-        @PathVariable long id,
-        @AuthenticationPrincipal KikaPrincipal principal
-    ) {
+    public void deleteGroup(@PathVariable long id, @AuthenticationPrincipal KikaPrincipal principal) {
         groupService.delete(id, principal);
     }
 
@@ -82,10 +78,10 @@ public class GroupController {
     @PostMapping("/group/{groupId}/owner")
     public void transferGroupOwnership(
         @PathVariable long groupId,
-        @RequestBody SingleNonNullableNumericPropertyRequest request,
+        @RequestBody @Valid SingleNonNullableNumericPropertyRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        groupService.transferOwnership(groupId, request.getValue(), principal);
+        groupService.transferOwnership(groupId, request.value(), principal);
     }
 
     @GetMapping("/group/{id}/members")
@@ -103,7 +99,8 @@ public class GroupController {
 
     @PostMapping("/group/{groupId}/member")
     public void addGroupMember(
-        @PathVariable long groupId, @RequestBody AddGroupMemberRequest request,
+        @PathVariable long groupId,
+        @RequestBody @Valid AddGroupMemberRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
         groupService.addMember(groupId, request.getId(), request.getRole(), principal);
@@ -111,7 +108,8 @@ public class GroupController {
 
     @DeleteMapping("/group/{groupId}/member/{memberId}")
     public void removeMember(
-        @PathVariable long groupId, @PathVariable long memberId,
+        @PathVariable long groupId,
+        @PathVariable long memberId,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
         groupService.removeMember(groupId, memberId, principal);
@@ -119,11 +117,12 @@ public class GroupController {
 
     @PostMapping("/group/{groupId}/member/{memberId}/role")
     public void changeMemberRole(
-        @PathVariable long groupId, @PathVariable long memberId,
-        @RequestBody SetMemberRoleRequest request,
+        @PathVariable long groupId,
+        @PathVariable long memberId,
+        @RequestBody @Valid SetMemberRoleRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        groupService.changeMemberRole(groupId, memberId, request.getRole(), principal);
+        groupService.changeMemberRole(groupId, memberId, request.role(), principal);
     }
 
     @GetMapping("/group/{groupId}/messages")
@@ -142,9 +141,9 @@ public class GroupController {
     @PostMapping("/group/{id}/edit")
     public void addGroupMembers(
         @PathVariable long id,
-        @RequestBody EditGroupRequest request,
+        @RequestBody @Valid EditGroupRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        groupService.edit(id, request.getName(), request.getMembers(), principal);
+        groupService.edit(id, request.name(), request.members(), principal);
     }
 }

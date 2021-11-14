@@ -2,10 +2,7 @@ package kika.controller.request;
 
 import org.jetbrains.annotations.Nullable;
 
-public record MoveTaskRequest(
-    @Nullable
-    Long listId,
-
+public record MoveListRequest(
     @Nullable
     Long parentId
 ) {

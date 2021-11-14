@@ -15,7 +15,6 @@ import kika.domain.Task;
 import kika.domain.TaskList;
 import kika.repository.AccountRepository;
 import kika.repository.AccountRoleRepository;
-import kika.repository.AccountSpecialAccessRepository;
 import kika.repository.GroupRepository;
 import kika.repository.TaskListRepository;
 import kika.security.principal.KikaPrincipal;
@@ -33,7 +32,6 @@ public class GroupService {
     private final AccountRepository accountRepository;
     private final AccountRoleRepository accountRoleRepository;
     private final TaskListRepository taskListRepository;
-    private final AccountSpecialAccessRepository accountSpecialAccessRepository;
 
     private void checkOwnerAccess(KikaPrincipal principal, Group group) {
         if (principal.accountId() != group.getOwner().safeId()) {

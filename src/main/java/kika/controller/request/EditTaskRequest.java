@@ -1,11 +1,9 @@
 package kika.controller.request;
 
 import org.hibernate.validator.constraints.Length;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public record CreateTaskRequest(
-    @NotNull
+public record EditTaskRequest(
     @Length(min = 1, max = 32)
     String name,
 

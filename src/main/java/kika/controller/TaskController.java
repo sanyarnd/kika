@@ -3,7 +3,9 @@ package kika.controller;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 import kika.controller.request.CreateTaskRequest;
+import kika.controller.request.EditTaskRequest;
 import kika.controller.request.MoveTaskRequest;
 import kika.controller.request.SetTaskStatusRequest;
 import kika.controller.request.SingleNonNullablePropertyRequest;
@@ -37,30 +39,30 @@ public class TaskController {
 
     @PostMapping("/task/create")
     public long createTask(
-        @RequestBody CreateTaskRequest request,
+        @RequestBody @Valid CreateTaskRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        return service.create(request.getName(),
-            request.getDescription(),
-            request.getListId(),
-            request.getParentId(),
+        return service.create(request.name(),
+            request.description(),
+            request.listId(),
+            request.parentId(),
             principal);
     }
 
     @PostMapping("/task/{id}/rename")
     public void renameTask(
-        @PathVariable long id, @RequestBody SingleNonNullablePropertyRequest request,
+        @PathVariable long id, @RequestBody @Valid SingleNonNullablePropertyRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        service.rename(id, request.getValue(), principal);
+        service.rename(id, request.value(), principal);
     }
 
     @PostMapping("/task/{id}/description")
     public void setTaskDescription(
-        @PathVariable long id, @RequestBody SingleNullableStringPropertyRequest request,
+        @PathVariable long id, @RequestBody @Valid SingleNullableStringPropertyRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        service.setDescription(id, request.getValue(), principal);
+        service.setDescription(id, request.value(), principal);
     }
 
     private List<GetTaskResponse> getFullChildrenTree(TaskDto task) {
@@ -98,10 +100,10 @@ public class TaskController {
 
     @PostMapping("/task/{id}/move")
     public void move(
-        @PathVariable long id, @RequestBody MoveTaskRequest request,
+        @PathVariable long id, @RequestBody @Valid MoveTaskRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        service.move(id, request.getListId(), request.getParentId(), principal);
+        service.move(id, request.listId(), request.parentId(), principal);
     }
 
     @PostMapping("/task/{id}/assignee")
@@ -160,9 +162,18 @@ public class TaskController {
 
     @PostMapping("/task/{id}/status")
     public void setTaskStatus(
-        @PathVariable long id, @RequestBody SetTaskStatusRequest request,
+        @PathVariable long id, @RequestBody @Valid SetTaskStatusRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        service.setStatus(id, request.getStatus(), principal);
+        service.setStatus(id, request.status(), principal);
+    }
+
+    @PostMapping("/task/{id}/edit")
+    public void editTask(
+        @PathVariable long id,
+        @RequestBody @Valid EditTaskRequest request,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
+        service.edit(id, request, principal);
     }
 }

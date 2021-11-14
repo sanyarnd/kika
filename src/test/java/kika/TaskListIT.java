@@ -6,6 +6,7 @@ import kika.domain.AccountRole;
 import kika.repository.AccountRepository;
 import kika.security.jwt.encode.JwtToken;
 import kika.security.jwt.encode.JwtTokenService;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.testcontainers.shaded.org.hamcrest.Matchers.nullValue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
@@ -390,5 +392,68 @@ public class TaskListIT extends AbstractIT {
             .andExpectAll(jsonPath(String.format("$.lists[?(@.id == %s)]", parentListId)).doesNotExist(),
                 jsonPath(String.format("$.lists[?(@.id == %s)]", childListId)).doesNotExist(),
                 jsonPath("$.count").value(0));
+    }
+
+    @Test
+    @Order(6)
+    public void moveList() throws Exception {
+        TestUtils utils = new TestUtils(mockMvc, accountRepository, jwtTokenService);
+        String ownerId = utils.createAccount();
+        JwtToken ownerToken = utils.getToken(ownerId);
+        String groupId = utils.createGroup(ownerId, ownerToken);
+
+        String parentListId = mockMvc.perform(post("/api/list/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("name", "list", "groupId", groupId)))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andReturn().getResponse().getContentAsString();
+
+        String childList1Id = mockMvc.perform(post("/api/list/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("name", "list", "groupId", groupId, "parentId", parentListId)))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andReturn().getResponse().getContentAsString();
+
+        String childList2Id = mockMvc.perform(post("/api/list/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("name", "list", "groupId", groupId, "parentId", parentListId)))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andReturn().getResponse().getContentAsString();
+
+        // Make child list 2 a child of child list 1
+        mockMvc.perform(post("/api/list/%s/move".formatted(childList2Id))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(writeJson(Map.of("parentId", childList1Id)))
+            .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/list/%s".formatted(childList2Id))
+            .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(jsonPath("$.parentId").value(childList1Id));
+        mockMvc.perform(get("/api/list/%s".formatted(childList1Id))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(jsonPath("$.children[?(@.id == %s)]".formatted(childList2Id)).exists());
+
+        // Trying to move a list into a child list => error
+        mockMvc.perform(post("/api/list/%s/move".formatted(parentListId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("parentId", childList2Id)))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(status().isInternalServerError());
+
+        // Move child list 1 to group (= no parent)
+        mockMvc.perform(post("/api/list/%s/move".formatted(childList1Id))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"parentId\": null}")
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/list/%s".formatted(childList1Id))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(jsonPath("$.parentId", Matchers.nullValue(), Long.class));
+        mockMvc.perform(get("/api/group/%s/lists".formatted(groupId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpectAll(jsonPath("$.count").value(2),
+                jsonPath("$.lists[?(@.id == %s)].parentId".formatted(childList1Id), Matchers.nullValue(), Long.class));
     }
 }
