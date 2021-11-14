@@ -15,10 +15,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import static java.lang.Integer.parseInt;
 import static kika.JsonUtils.numericList;
 import static kika.JsonUtils.writeJson;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -75,7 +73,7 @@ public class TaskIT extends AbstractIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"value\": null}")
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isBadRequest());
 
         mockMvc.perform(post(String.format("/api/task/%s/rename", taskId))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -88,7 +86,7 @@ public class TaskIT extends AbstractIT {
             .andExpectAll(jsonPath("$.name").value("kate's task"),
                 jsonPath("$.description").isEmpty(),
                 jsonPath("$.parentId").isEmpty(),
-                jsonPath("$.childrenIds").isEmpty());
+                jsonPath("$.children").isEmpty());
 
         mockMvc.perform(post(String.format("/api/task/%s/description", taskId))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -101,7 +99,7 @@ public class TaskIT extends AbstractIT {
             .andExpectAll(jsonPath("$.name").value("kate's task"),
                 jsonPath("$.description").value("an awesome task"),
                 jsonPath("$.parentId").isEmpty(),
-                jsonPath("$.childrenIds").isEmpty());
+                jsonPath("$.children").isEmpty());
 
         mockMvc.perform(post(String.format("/api/task/%s/description", taskId))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -114,7 +112,7 @@ public class TaskIT extends AbstractIT {
             .andExpectAll(jsonPath("$.name").value("kate's task"),
                 jsonPath("$.description").isEmpty(),
                 jsonPath("$.parentId").isEmpty(),
-                jsonPath("$.childrenIds").isEmpty());
+                jsonPath("$.children").isEmpty());
     }
 
     @Test
@@ -271,7 +269,7 @@ public class TaskIT extends AbstractIT {
         mockMvc.perform(get(String.format("/api/list/%s/tasks", list1Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(
-                jsonPath(String.format("$.tasks[?(@.id == %s)].parentId", task1Id)).value(Integer.parseInt(task3Id)),
+                jsonPath(String.format("$.tasks[?(@.id == %s)].children[?(@.id == %s)].parentId", task3Id, task1Id)).value(Integer.parseInt(task3Id)),
                 jsonPath(String.format("$.tasks[?(@.id == %s)].parentId", task3Id), nullValue(), Long.class),
                 jsonPath("$.count").value(2));
         mockMvc.perform(get(String.format("/api/task/%s", task1Id))
@@ -279,8 +277,8 @@ public class TaskIT extends AbstractIT {
             .andExpect(jsonPath("$.parentId").value(task3Id));
         mockMvc.perform(get(String.format("/api/task/%s", task3Id))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
-            .andExpectAll(jsonPath("$.childrenIds").value(hasItem(parseInt(task1Id))),
-                jsonPath("$.childrenIds").value(hasSize(1)));
+            .andExpectAll(jsonPath("$.children[?(@.id == %s)]".formatted(task1Id)).exists(),
+                jsonPath("$.children").value(hasSize(1)));
     }
 
     @Test
@@ -325,7 +323,7 @@ public class TaskIT extends AbstractIT {
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpectAll(jsonPath("$.parentId", nullValue(), Long.class),
                 jsonPath("$.listId").value(list2Id),
-                jsonPath("$.childrenIds").value(hasSize(1)));
+                jsonPath("$.children").value(hasSize(1)));
 
         mockMvc.perform(get(String.format("/api/task/%s", childChildTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
@@ -339,7 +337,7 @@ public class TaskIT extends AbstractIT {
 
         mockMvc.perform(get(String.format("/api/task/%s", parentTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
-            .andExpect(jsonPath("$.childrenIds").isEmpty());
+            .andExpect(jsonPath("$.children").isEmpty());
 
         // Move childChildTask back to list 1 and set parentTask as its parent => success
         mockMvc.perform(post(String.format("/api/task/%s/move", childChildTaskId))
@@ -350,12 +348,12 @@ public class TaskIT extends AbstractIT {
 
         mockMvc.perform(get(String.format("/api/task/%s", parentTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
-            .andExpectAll(jsonPath("$.childrenIds").value(hasSize(1)),
-                jsonPath("$.childrenIds").value(hasItem(Integer.parseInt(childChildTaskId))));
+            .andExpectAll(jsonPath("$.children").value(hasSize(1)),
+                jsonPath("$.children[?(@.id == %s)]".formatted(childChildTaskId)).exists());
 
         mockMvc.perform(get(String.format("/api/task/%s", childTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
-            .andExpect(jsonPath("$.childrenIds").isEmpty());
+            .andExpect(jsonPath("$.children").isEmpty());
 
         mockMvc.perform(get(String.format("/api/task/%s", childChildTaskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
@@ -681,5 +679,16 @@ public class TaskIT extends AbstractIT {
         mockMvc.perform(get(String.format("/api/task/%s", taskId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andExpect(jsonPath("$.status").value(Task.Status.COMPLETED.name()));
+
+        // Setting a completed child of a completed task to incomplete makes parent task incomplete too
+        mockMvc.perform(post(String.format("/api/task/%s/status", childTaskId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(writeJson(Map.of("status", Task.Status.NOT_COMPLETED.name())))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get(String.format("/api/task/%s", taskId))
+                .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
+            .andExpect(jsonPath("$.status").value(Task.Status.NOT_COMPLETED.name()));
     }
 }

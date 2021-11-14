@@ -51,7 +51,8 @@ public class TaskController {
 
     @PostMapping("/task/{id}/rename")
     public void renameTask(
-        @PathVariable long id, @RequestBody @Valid SingleNonNullablePropertyRequest request,
+        @PathVariable long id,
+        @RequestBody @Valid SingleNonNullablePropertyRequest request,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
         service.rename(id, request.value(), principal);

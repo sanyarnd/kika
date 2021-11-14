@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import kika.controller.request.EditTaskListRequest;
 import kika.controller.response.AccountWithAccess;
 import kika.controller.response.GetTaskListResponse;
+import kika.controller.response.GetTaskListTaskResponse;
+import kika.controller.response.GetTaskListTasksResponse;
 import kika.controller.response.TaskListSpecialAccessResponse;
 import kika.domain.Account;
 import kika.domain.AccountRole;
@@ -58,10 +60,7 @@ public class TaskListService {
     }
 
     private void checkListAccess(KikaPrincipal principal, TaskList list) {
-        Set<AccountSpecialAccess> specialAccess = list.getSpecialAccess();
-        if (!specialAccess.isEmpty() && specialAccess.stream()
-            .map(accountSpecialAccess -> accountSpecialAccess.getAccount().safeId())
-            .noneMatch(memberId -> memberId == principal.accountId())) {
+        if (!list.accountHasAccess(principal.accountId())) {
             throw new BadCredentialsException("No access");
         }
     }
@@ -258,15 +257,16 @@ public class TaskListService {
     }
 
     @Transactional
-    public Set<TaskDto> getTasks(long id, KikaPrincipal principal) {
+    public GetTaskListTasksResponse getTasks(long id, KikaPrincipal principal) {
         TaskList list = taskListRepository.getById(id);
         runAccessChecks(principal, list);
-        return list.getTasks().stream()
+        return new GetTaskListTasksResponse(list.getTasks().stream()
             .filter(task -> task.getParent() == null)
-            .map(task -> new TaskDto(task.safeId(), task.getName(), task.getDescription(), task.getStatus(),
+            .map(task -> new GetTaskListTaskResponse(task.safeId(),
+                task.getName(), task.getDescription(), task.getStatus(),
                 task.getParentId(), task.getList().safeId(),
                 getFullTaskTree(task)))
-            .collect(Collectors.toSet());
+            .toList(), list.getTasks().size());
     }
 
     @Transactional

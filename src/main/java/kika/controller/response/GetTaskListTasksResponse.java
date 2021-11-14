@@ -1,6 +1,6 @@
 package kika.controller.response;
 
-import java.util.Set;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GetTaskListTasksResponse {
-    private Set<GetTaskResponse> tasks;
+    private List<GetTaskListTaskResponse> tasks;
     private long count;
 }

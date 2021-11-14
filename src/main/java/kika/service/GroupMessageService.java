@@ -2,6 +2,7 @@ package kika.service;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
+import kika.domain.Account;
 import kika.domain.Group;
 import kika.domain.GroupMessage;
 import kika.repository.AccountRepository;
@@ -48,7 +49,8 @@ public class GroupMessageService {
         checkMemberAccess(principal, group);
         return group.getMessages().stream()
             .map(message -> new GroupMessageDto(message.safeId(), message.getGroup().safeId(), message.getCreatedDate(),
-                message.getBody(), accountRepository.getById(Long.valueOf(message.getCreatedBy())).getName()))
+                message.getBody(), accountRepository.findById(Long.valueOf(message.getCreatedBy())).map(
+                Account::getName).orElse("(аккаунт удален)")))
             .collect(Collectors.toSet());
     }
 

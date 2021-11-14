@@ -23,7 +23,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.testcontainers.shaded.org.hamcrest.Matchers.nullValue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
@@ -75,7 +74,7 @@ public class TaskListIT extends AbstractIT {
 
         mockMvc.perform(get(String.format("/api/list/%s", listId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
-            .andExpectAll(jsonPath("$.childrenIds").isEmpty(),
+            .andExpectAll(jsonPath("$.children").isEmpty(),
                 jsonPath("$.parentId").isEmpty(),
                 jsonPath("$.name").value("kate's list"));
     }
@@ -286,9 +285,10 @@ public class TaskListIT extends AbstractIT {
 
         mockMvc.perform(get(String.format("/api/list/%s/accounts", parentListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
-            .andExpectAll(jsonPath("$.count").value(2),
-                jsonPath(String.format("$.accounts[?(@.id == %s)]", account1Id)).exists(),
-                jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
+            .andExpectAll(jsonPath("$.count").value(3),
+                jsonPath(String.format("$.accounts[?(@.id == %s)].hasAccess", account1Id)).value(true),
+                jsonPath(String.format("$.accounts[?(@.id == %s)].hasAccess", account2Id)).value(true),
+                jsonPath(String.format("$.accounts[?(@.id == %s)].hasAccess", ownerId)).value(false));
 
         // ...but is not possible from an account that has no access
         mockMvc.perform(post(String.format("/api/list/%s/accounts", parentListId))
@@ -322,8 +322,9 @@ public class TaskListIT extends AbstractIT {
 
         mockMvc.perform(get(String.format("/api/list/%s/accounts", childListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account2Token.accessToken()))
-            .andExpectAll(jsonPath("$.count").value(1),
-                jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
+            .andExpectAll(jsonPath("$.count").value(2),
+                jsonPath(String.format("$.accounts[?(@.id == %s)].hasAccess", account2Id)).value(true),
+                jsonPath(String.format("$.accounts[?(@.id == %s)].hasAccess", account1Id)).value(false));
 
         // From account side
         mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))
@@ -338,9 +339,10 @@ public class TaskListIT extends AbstractIT {
         // Check that account1 still has access to parent list
         mockMvc.perform(get(String.format("/api/list/%s/accounts", parentListId))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, account1Token.accessToken()))
-            .andExpectAll(jsonPath("$.count").value(2),
-                jsonPath(String.format("$.accounts[?(@.id == %s)]", account1Id)).exists(),
-                jsonPath(String.format("$.accounts[?(@.id == %s)]", account2Id)).exists());
+            .andExpectAll(jsonPath("$.count").value(3),
+                jsonPath(String.format("$.accounts[?(@.id == %s)].hasAccess", account1Id)).value(true),
+                jsonPath(String.format("$.accounts[?(@.id == %s)].hasAccess", account2Id)).value(true),
+                jsonPath(String.format("$.accounts[?(@.id == %s)].hasAccess", ownerId)).value(false));
 
         // From account side
         mockMvc.perform(get(String.format("/api/account/group/%s/lists", groupId))

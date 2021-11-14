@@ -1,7 +1,7 @@
 package kika.controller.request;
 
+import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public record CreateTaskRequest(

@@ -2,7 +2,6 @@ package kika;
 
 import java.util.Map;
 import kika.configuration.security.SecurityConfiguration;
-import kika.domain.Account;
 import kika.domain.AccountRole;
 import kika.repository.AccountRepository;
 import kika.security.jwt.encode.JwtToken;
@@ -21,7 +20,6 @@ import static kika.JsonUtils.writeJson;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 

@@ -2,8 +2,8 @@ package kika.controller.request;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public record EditTaskListRequest(

@@ -1,8 +1,6 @@
 package kika.controller;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import javax.validation.Valid;
 import kika.controller.request.CreateTaskListRequest;
 import kika.controller.request.EditTaskListRequest;
@@ -111,11 +109,7 @@ public class TaskListController {
         @PathVariable long id,
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
-        Set<TaskDto> tasks = service.getTasks(id, principal);
-        return new GetTaskListTasksResponse(tasks.stream()
-            .map(task -> new GetTaskResponse(task.id(), task.name(), task.description(),
-                task.status(), task.parentId(), task.listId(), getFullChildrenTree(task)))
-            .collect(Collectors.toSet()), tasks.size());
+        return service.getTasks(id, principal);
     }
 
     @PostMapping("list/{id}/edit")
