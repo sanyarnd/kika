@@ -15,6 +15,6 @@ public class OpenApiConfiguration {
 
     private Info openApiInformation() {
         return new Info().title("Kika API")
-            .contact(new Contact().name("Ekaterina Biryukova").url("https://google.com"));
+            .contact(new Contact().name("Ekaterina Biryukova").url("https://github.com/kateabr"));
     }
 }

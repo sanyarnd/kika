@@ -9,9 +9,11 @@ import java.security.spec.X509EncodedKeySpec;
 import java.time.Duration;
 import java.util.Base64;
 import lombok.Getter;
+import org.springframework.boot.context.properties.ConstructorBinding;
 
 @Getter
-public class AccessTokenProperties {
+@ConstructorBinding
+public final class AccessTokenProperties {
     private final Duration expirationTime;
     private final Key privateKey;
     private final Key publicKey;

@@ -6,5 +6,4 @@ import org.zalando.problem.spring.web.advice.security.SecurityAdviceTrait;
 
 @ControllerAdvice
 public class ControllerAdviceConfiguration implements ProblemHandling, SecurityAdviceTrait {
-
 }

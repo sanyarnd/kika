@@ -1,6 +1,7 @@
 package kika.configuration.application;
 
 import java.time.Duration;
+import org.springframework.boot.context.properties.ConstructorBinding;
 
 /**
  * Cookie configuration
@@ -17,6 +18,7 @@ import java.time.Duration;
  * @param isHttpOnly sets the flag that controls if this cookie will be hidden from scripts on the client side.
  * @param maxAge     Sets the maximum age of the cookie.
  */
+@ConstructorBinding
 public record CookieProperties(
     String path,
     String domain,
