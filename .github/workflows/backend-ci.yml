@@ -41,6 +41,14 @@ jobs:
       - name: Maven Integration Tests
         run: mvn failsafe:integration-test failsafe:verify
 
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: |
+            target/surefire-reports/TEST-*.xml
+            target/failsafe-reports/TEST-*.xml
+
 # TODO: need a repository to push to
 #      - name: Unpack JAR
 #        run: mkdir exploded-jar && cd exploded-jar && java -Djarmode=layertools -jar ../target/kika.jar extract
