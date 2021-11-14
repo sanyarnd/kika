@@ -1,5 +1,6 @@
 package kika.security.jwt.decode;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Objects;
 import kika.domain.Account;
 import kika.security.principal.JwtPrincipal;
@@ -13,6 +14,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JwtTokenAuthenticationProvider implements AuthenticationProvider {
     @Override
+    @SuppressFBWarnings(
+        value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
+        justification = "Known bug: https://github.com/spotbugs/spotbugs/issues/651"
+    )
     public Authentication authenticate(Authentication authentication) {
         if (!(authentication instanceof JwtAuthenticationToken jwtAuthenticationToken)) {
             throw new IllegalArgumentException(

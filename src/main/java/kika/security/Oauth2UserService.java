@@ -1,10 +1,12 @@
 package kika.security;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Objects;
 import kika.domain.Account;
 import kika.repository.AccountRepository;
 import kika.security.principal.OAuth2Principal;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -32,10 +34,14 @@ public class Oauth2UserService implements OAuth2UserService<OAuth2UserRequest, O
         return new OAuth2Principal(user, account.safeId(), provider, providerId);
     }
 
+    @SuppressFBWarnings(
+        value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
+        justification = "Known bug: https://github.com/spotbugs/spotbugs/issues/651"
+    )
     private String extractOauth2Id(OAuth2User user, Account.Provider provider) {
         return switch (provider) {
             case GITHUB -> Objects.requireNonNull(user.getAttribute("id")).toString();
-            default -> throw new IllegalStateException("Unexpected value: " + provider);
+            case GOOGLE -> throw new NotImplementedException("Google auth is not yet implemented");
         };
     }
 }

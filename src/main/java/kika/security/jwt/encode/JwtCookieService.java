@@ -1,5 +1,6 @@
 package kika.security.jwt.encode;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import javax.servlet.http.Cookie;
 import kika.configuration.application.CookieProperties;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,10 @@ public class JwtCookieService {
         return createCookieInternal(accessTokenName, accessToken, accessCookieProperties);
     }
 
+    @SuppressFBWarnings(
+        value = {"HTTPONLY_COOKIE", "INSECURE_COOKIE"},
+        justification = "Configurable property"
+    )
     private Cookie createCookieInternal(String cookieName, String cookieValue, CookieProperties cookieProperties) {
         Cookie cookie = new Cookie(cookieName, cookieValue);
         cookie.setPath(cookieProperties.path());
