@@ -49,8 +49,9 @@
         "eslint-plugin-vue": "7.20.0",
         "node-sass": "6.0.1",
         "prettier": "2.4.1",
-        "sass-loader": "12.3.0",
+        "sass-loader": "10.2.0",
         "typescript": "4.4.4",
+        "vue-clipboard2": "0.3.3",
         "vue-template-compiler": "2.6.14"
     },
     "packageManager": "yarn@3.0.2"
