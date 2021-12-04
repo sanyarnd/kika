@@ -5,9 +5,24 @@ Vue.use(VueRouter);
 
 const routes: RouteConfig[] = [
   {
-    path: "/",
-    name: "home",
-    component: () => import("@/pages/app/views/Home.vue")
+    path: "",
+    name: "index",
+    component: () => import("@/pages/app/views/Index.vue")
+  },
+  {
+    path: "/settings",
+    name: "app-settings",
+    component: () => import("@/pages/app/views/AppSettings.vue")
+  },
+  {
+    path: "/account/edit",
+    name: "account-edit",
+    component: () => import("@/pages/app/views/AccountEdit.vue")
+  },
+  {
+    path: "/group/new",
+    name: "group-new",
+    component: () => import("@/pages/app/views/GroupNew.vue")
   },
   {
     path: "/group/:id",
@@ -22,6 +37,12 @@ const routes: RouteConfig[] = [
     component: () => import("@/pages/app/views/GroupEdit.vue")
   },
   {
+    path: "/list/new",
+    props: true,
+    name: "list-new",
+    component: () => import("@/pages/app/views/ListNew.vue")
+  },
+  {
     path: "/list/:id/edit",
     props: true,
     name: "list-edit",
@@ -32,6 +53,12 @@ const routes: RouteConfig[] = [
     props: true,
     name: "list",
     component: () => import("@/pages/app/views/List.vue")
+  },
+  {
+    path: "/task/new",
+    props: true,
+    name: "task-new",
+    component: () => import("@/pages/app/views/TaskNew.vue")
   },
   {
     path: "/task/:id",

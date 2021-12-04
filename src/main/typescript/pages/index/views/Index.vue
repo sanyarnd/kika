@@ -1,12 +1,14 @@
 <template>
-  <login-dialog></login-dialog>
+  <div>HOME {{ appStore.getters.version }}!</div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import LoginDialog from "@/components/LoginDialog.vue";
+import { appModule } from "@/store/app-module";
 
-@Component({ components: { LoginDialog } })
-export default class extends Vue {}
+@Component({})
+export default class extends Vue {
+  private readonly appStore = appModule.context(this.$store);
+}
 </script>

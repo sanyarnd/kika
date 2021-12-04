@@ -2,6 +2,7 @@ package kika.service;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
+import kika.controller.response.MessageBulk;
 import kika.domain.Account;
 import kika.domain.Group;
 import kika.domain.GroupMessage;
@@ -59,7 +60,7 @@ public class GroupMessageService {
         GroupMessage message = groupMessageRepository.getById(id);
         checkMemberAccess(principal, message.getGroup());
         return new GroupMessageDto(message.safeId(), message.getGroup().safeId(), message.getCreatedDate(),
-            message.getBody(), accountRepository.getById(Long.valueOf(message.getCreatedBy())).getName());
+            message.getBody(), accountRepository.findById(Long.parseLong(message.getCreatedBy())).map(Account::getName).orElse("(аккаунт удален)"));
     }
 
     @Transactional
@@ -72,5 +73,20 @@ public class GroupMessageService {
             throw new IllegalArgumentException("Only members of the group can delete group messages");
         }
         groupMessageRepository.delete(message);
+    }
+
+    @Transactional
+    public MessageBulk getByGroup(long id, long offset, long count, KikaPrincipal principal) {
+        Group group = groupRepository.getById(id);
+        checkMemberAccess(principal, group);
+        return new MessageBulk(group.getMessages().stream()
+            .sorted((m1, m2) -> Long.compare(m2.safeId(), m1.safeId()))
+            .skip(offset)
+            .limit(count)
+            .map(message -> new MessageBulk.SubMessage(message.safeId(), message.getCreatedDate(), message.getBody(),
+                accountRepository.findById(Long.parseLong(message.getCreatedBy())).map(Account::getName).orElse("(аккаунт удален)")))
+            .toList(),
+            group.getMessages().size(),
+            offset);
     }
 }

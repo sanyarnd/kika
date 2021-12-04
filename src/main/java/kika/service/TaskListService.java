@@ -1,16 +1,13 @@
 package kika.service;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import kika.controller.request.EditTaskListRequest;
-import kika.controller.response.AccountWithAccess;
-import kika.controller.response.GetTaskListResponse;
-import kika.controller.response.GetTaskListTaskResponse;
-import kika.controller.response.GetTaskListTasksResponse;
-import kika.controller.response.TaskListSpecialAccessResponse;
+import kika.controller.response.*;
 import kika.domain.Account;
 import kika.domain.AccountRole;
 import kika.domain.AccountSpecialAccess;
@@ -75,6 +72,7 @@ public class TaskListService {
             return List.of();
         }
         return task.getChildren().stream()
+            .sorted(Comparator.comparingLong(AutoPersistable::safeId))
             .map(child -> new TaskDto(child.safeId(),
                 child.getName(),
                 child.getDescription(),
@@ -96,6 +94,7 @@ public class TaskListService {
                 child.getGroup().safeId(),
                 getFullChildrenTree(child, accId),
                 child.getTasks().stream()
+                    .sorted(Comparator.comparingLong(AutoPersistable::safeId))
                     .map(task -> new TaskDto(task.safeId(),
                         task.getName(),
                         task.getDescription(),
@@ -140,6 +139,7 @@ public class TaskListService {
                 getFullChildrenTree(child, principal.accountId()),
                 child.getTasks().stream()
                     .filter(task -> task.getParent() == null)
+                    .sorted(Comparator.comparingLong(AutoPersistable::safeId))
                     .map(task -> new TaskDto(task.safeId(),
                         task.getName(),
                         task.getDescription(),
@@ -150,6 +150,7 @@ public class TaskListService {
                     .toList())).toList(),
             list.getTasks().stream()
                 .filter(task -> task.getParent() == null)
+                .sorted(Comparator.comparingLong(AutoPersistable::safeId))
                 .map(task -> new TaskDto(task.safeId(),
                     task.getName(),
                     task.getDescription(),
@@ -229,10 +230,12 @@ public class TaskListService {
                 throw new IllegalArgumentException("The new access set must be a subset of the parent access set");
             }
             // Recursively revoke access from accounts from this list and all its children
-            list.getSpecialAccess().stream()
-                .filter(accSpAcc -> !membersWithAccessIds.contains(accSpAcc.getAccount().safeId()))
-                .forEach(accSpAcc -> revokeSpecialAccessRecursively(list.getSpecialAccess(),
-                    accSpAcc.getAccount().safeId(), list.getChildren()));
+            for (AccountSpecialAccess accountSpecialAccess : list.getSpecialAccess()) {
+                if (!membersWithAccessIds.contains(accountSpecialAccess.getAccount().safeId())) {
+                    revokeSpecialAccessRecursively(list.getSpecialAccess(),
+                        accountSpecialAccess.getAccount().safeId(), list.getChildren());
+                }
+            }
             // Add access to accounts that do not have it yet
             Set<Long> currentAccessIds = list.getSpecialAccess().stream()
                 .map(accSpAcc -> accSpAcc.getAccount().safeId())
@@ -262,6 +265,7 @@ public class TaskListService {
         runAccessChecks(principal, list);
         return new GetTaskListTasksResponse(list.getTasks().stream()
             .filter(task -> task.getParent() == null)
+            .sorted(Comparator.comparingLong(AutoPersistable::safeId))
             .map(task -> new GetTaskListTaskResponse(task.safeId(),
                 task.getName(), task.getDescription(), task.getStatus(),
                 task.getParentId(), task.getList().safeId(),
@@ -298,5 +302,27 @@ public class TaskListService {
         } else {
             list.setParent(null);
         }
+    }
+
+    @Transactional
+    public GetListInfoResponse getInfo(long id, KikaPrincipal principal) {
+        TaskList list = taskListRepository.getById(id);
+        runAccessChecks(principal, list);
+        return new GetListInfoResponse(list.safeId(),
+            list.getName(),
+            new GetListInfoResponse.SubGroup(list.getGroup().safeId(), list.getGroup().getName(), list.getGroup().getRole(principal.accountId())),
+            list.getParent() != null ? new GetListInfoResponse.ParentTaskList(list.getParent().safeId(), list.getParent().getName()) : null,
+            list.getChildren().stream().map(child -> new GetListInfoResponse.ChildTaskList(child.safeId(), child.getName())).toList(),
+            list.rootTasks().stream().map(task -> new GetListInfoResponse.SubTask(task.safeId(), task.getName(), task.getStatus())).toList());
+    }
+
+    @Transactional
+    public GetListEditInfoResponse getEditInfo(long id, KikaPrincipal principal) {
+        TaskList list = taskListRepository.getById(id);
+        TaskListSpecialAccessResponse accountsWithAccess = getAccountsWithAccess(id, principal);
+        return new GetListEditInfoResponse(list.safeId(), list.getName(),
+            new GetListEditInfoResponse.SubGroup(list.getGroup().safeId(), list.getGroup().getName(), list.getGroup().getRole(principal.accountId())),
+            list.getParent() != null ? new GetListEditInfoResponse.ParentTaskList(list.getParent().safeId(), list.getParent().getName()) : null,
+            accountsWithAccess);
     }
 }

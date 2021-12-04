@@ -6,15 +6,15 @@
           <b-col class="text-truncate">
             {{ item.name }}
             <span v-b-toggle="getChildrenCollapseId(item.id)">
-              <font-awesome-icon icon="chevron-right"
+              <font-awesome-icon
                 v-if="item.children.length > 0"
                 :id="'chevron-' + item.id"
                 class="ml-1 rotate"
+                icon="chevron-right"
                 @click="toggleRotation(item.id)"
               ></font-awesome-icon
             ></span>
           </b-col>
-
         </b-row>
       </li>
       <b-collapse :id="getChildrenCollapseId(item.id)" class="ml-3">
@@ -64,12 +64,3 @@ export interface TreeItem {
   children: TreeItem[];
 }
 </script>
-<style scoped lang="scss">
-.rotate {
-  transition: all 0.2s linear;
-}
-
-.rotate.down {
-  transform: rotate(90deg);
-}
-</style>

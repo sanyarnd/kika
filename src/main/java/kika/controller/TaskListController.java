@@ -7,6 +7,10 @@ import kika.controller.request.EditTaskListRequest;
 import kika.controller.request.MoveListRequest;
 import kika.controller.request.NumericPropertyListRequest;
 import kika.controller.request.SingleNonNullablePropertyRequest;
+import kika.controller.response.AccountWithAccess;
+import kika.controller.response.GetGroupEditInfoResponse;
+import kika.controller.response.GetListEditInfoResponse;
+import kika.controller.response.GetListInfoResponse;
 import kika.controller.response.GetTaskListResponse;
 import kika.controller.response.GetTaskListTasksResponse;
 import kika.controller.response.GetTaskResponse;
@@ -60,6 +64,21 @@ public class TaskListController {
         TaskListDto taskList = service.get(id, principal);
         return new GetTaskListResponse(taskList.id(), taskList.name(), taskList.parent(), taskList.group(),
             taskList.children(), taskList.tasks());
+    }
+
+    @GetMapping("/list/{id}/info/edit")
+    public GetListEditInfoResponse getListEditInfo(@PathVariable long id, @AuthenticationPrincipal KikaPrincipal principal) {
+        return service.getEditInfo(id, principal);
+    }
+
+    @GetMapping("/list/{id}/info/create")
+    public GetListEditInfoResponse getListCreateInfo(@PathVariable long id, @AuthenticationPrincipal KikaPrincipal principal) {
+        GetListEditInfoResponse createInfo = service.getEditInfo(id, principal);
+        createInfo.getAccessData().getAccounts()
+            .removeAll(createInfo.getAccessData().getAccounts().stream()
+                .filter(acc -> !acc.isHasAccess())
+                .toList());
+        return createInfo;
     }
 
     @DeleteMapping("/list/{id}")
@@ -128,5 +147,11 @@ public class TaskListController {
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
         service.move(id, request.parentId(), principal);
+    }
+
+    @GetMapping("/list/{id}/info")
+    public GetListInfoResponse getListInfo(@PathVariable long id,
+        @AuthenticationPrincipal KikaPrincipal principal) {
+        return service.getInfo(id, principal);
     }
 }

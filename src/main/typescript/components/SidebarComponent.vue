@@ -1,5 +1,5 @@
 <template>
-  <b-sidebar id="sidebar-1" title="Управление" shadow>
+  <b-sidebar id="sidebar-1" shadow title="Управление">
     <sidebar-tree-view :items="menu_items"></sidebar-tree-view>
     <template #footer>
       <div class="d-flex bg-dark text-light align-items-center px-3 py-2">
@@ -22,9 +22,8 @@ export default class extends Vue {
       icon: "users",
       id: 0,
       children: [
-        { name: "Выбрать группу", id: 9, link: "#", children: [] },
-        { name: "Мои группы", id: 1, link: "#", children: [] },
-        { name: "Администрирование", id: 2, link: "#", children: [] }
+        { name: "Мои группы", id: 1, link: { name: "index" }, children: [] },
+        { name: "Администрирование", id: 2, link: { name: "" }, children: [] }
       ]
     },
     {
@@ -32,8 +31,8 @@ export default class extends Vue {
       id: 3,
       icon: "user-alt",
       children: [
-        { name: "Настройки", id: 4, link: "#", children: [] },
-        { name: "Выход", id: 5, link: "#", children: [] }
+        { name: "Настройки", id: 4, link: { name: "account-edit" }, children: [] },
+        { name: "Выход", id: 5, link: { name: "" }, children: [] }
       ]
     },
     {
@@ -41,8 +40,8 @@ export default class extends Vue {
       icon: "cogs",
       id: 6,
       children: [
-        { name: "Настройки", id: 7, link: "#", children: [] },
-        { name: "О приложении", id: 8, link: "#", children: [] }
+        { name: "Настройки", id: 7, link: { name: "app-settings" }, children: [] },
+        { name: "О приложении", id: 8, link: { name: "" }, children: [] }
       ]
     }
   ];

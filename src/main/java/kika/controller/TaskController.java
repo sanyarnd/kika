@@ -12,6 +12,8 @@ import kika.controller.request.SingleNonNullablePropertyRequest;
 import kika.controller.request.SingleNullableStringPropertyRequest;
 import kika.controller.response.GetTaskAssigneeResponse;
 import kika.controller.response.GetTaskAssigneesResponse;
+import kika.controller.response.GetTaskEditInfoResponse;
+import kika.controller.response.GetTaskInfoResponse;
 import kika.controller.response.GetTaskResponse;
 import kika.controller.response.GetTaskSubscriberResponse;
 import kika.controller.response.GetTaskSubscribersResponse;
@@ -176,5 +178,17 @@ public class TaskController {
         @AuthenticationPrincipal KikaPrincipal principal
     ) {
         service.edit(id, request, principal);
+    }
+
+    @GetMapping("/task/{id}/info")
+    public GetTaskInfoResponse getTaskInfo(@PathVariable long id,
+        @AuthenticationPrincipal KikaPrincipal principal) {
+        return service.getInfo(id, principal);
+    }
+
+    @GetMapping("/task/{id}/info/edit")
+    public GetTaskEditInfoResponse getTaskEditInfo(@PathVariable long id,
+        @AuthenticationPrincipal KikaPrincipal principal) {
+        return service.getEditInfo(id, principal);
     }
 }

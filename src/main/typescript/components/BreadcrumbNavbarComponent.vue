@@ -6,8 +6,8 @@
     <b-link
       v-for="(item, key) in items"
       :key="key"
-      class="text-truncate breadcrumb-item text-dark"
-      :to="{ name: item.type, params: { id: item.id } }"
+      :to="{ name: item.type.toLowerCase(), params: { id: `${item.id}` } }"
+      class="breadcrumb-item text-dark text-truncate"
     >
       {{ item.name }}
     </b-link>
@@ -17,16 +17,11 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
+import { NavbarItem } from "@/models";
 
 @Component({ components: {} })
 export default class extends Vue {
   @Prop()
-  private readonly items!: NavigationItem[];
-}
-
-export interface NavigationItem {
-  id: string;
-  name: string;
-  type: string;
+  private readonly items!: NavbarItem[];
 }
 </script>

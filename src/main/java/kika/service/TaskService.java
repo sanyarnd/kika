@@ -1,15 +1,19 @@
 package kika.service;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import kika.controller.request.EditTaskRequest;
+import kika.controller.response.GetTaskEditInfoResponse;
+import kika.controller.response.GetTaskInfoResponse;
 import kika.domain.Account;
 import kika.domain.AccountRole;
 import kika.domain.AccountTaskAssignee;
 import kika.domain.AccountTaskSubscriber;
+import kika.domain.AutoPersistable;
 import kika.domain.Group;
 import kika.domain.Task;
 import kika.domain.TaskList;
@@ -41,6 +45,7 @@ public class TaskService {
             return List.of();
         }
         return task.getChildren().stream()
+            .sorted(Comparator.comparingLong(AutoPersistable::safeId))
             .map(child -> new TaskDto(child.safeId(),
                 child.getName(),
                 child.getDescription(),
@@ -49,14 +54,6 @@ public class TaskService {
                 child.getList().safeId(),
                 getFullTaskTree(child)))
             .toList();
-    }
-
-    private void checkAccountAccess(Set<Account> accountsWithAccess, Account account, Task task) {
-        if (!accountsWithAccess.contains(account)) {
-            throw new IllegalArgumentException(
-                String.format("Account id=%d has no access to the task list id=%d", account.safeId(),
-                    task.getList().safeId()));
-        }
     }
 
     private void checkTaskListAndParent(long listId, @NotNull Task parent) {
@@ -151,12 +148,19 @@ public class TaskService {
                 task.moveChildrenIntoList(list);
             }
         }
-        if (parentId == null) {
-            task.setParent(null);
-        } else {
-            Task parent = taskRepository.getById(parentId);
-            checkTaskListAndParent(listId != null ? listId : task.getList().safeId(), parent);
-            task.setParent(parent);
+        if(!Objects.equals(parentId, task.getParentId())) {
+            if (parentId == null) {
+                task.setParent(null);
+            } else {
+                Task parent = taskRepository.getById(parentId);
+                if (listId != null) {
+                    checkTaskListAndParent(listId, parent);
+                }
+                task.setParent(parent);
+                if (parent.getList().safeId() != task.getList().safeId()) {
+                    task.setList(parent.getList());
+                }
+            }
         }
     }
 
@@ -232,5 +236,36 @@ public class TaskService {
         }
 
         move(id, request.listId(), request.parentId(), principal);
+    }
+
+    @Transactional
+    public GetTaskInfoResponse getInfo(long id, KikaPrincipal principal) {
+        Task task = taskRepository.getById(id);
+        runAccessChecks(principal, task.getList());
+        return new GetTaskInfoResponse(id,
+            task.getName(),
+            task.getDescription(),
+            task.isSubscribed(principal.accountId()),
+            task.isAssigned(principal.accountId()),
+            task.getParent() != null ?
+                new GetTaskInfoResponse.ParentTask(task.getParent().safeId(), task.getParent().getName()) : null,
+            new GetTaskInfoResponse.SubTaskList(task.getList().safeId(), task.getList().getName()),
+            new GetTaskInfoResponse.SubGroup(task.getList().getGroup().safeId(), task.getList().getGroup().getName(),
+                task.getList().getGroup().getRole(principal.accountId())),
+            new ArrayList<>(task.getChildren().stream()
+                .map(child -> new GetTaskInfoResponse.ChildTask(child.safeId(), child.getName(), child.getStatus()))
+                .toList()),
+            task.getStatus());
+    }
+
+    @Transactional
+    public GetTaskEditInfoResponse getEditInfo(long id, KikaPrincipal principal) {
+        Task task = taskRepository.getById(id);
+        runAccessChecks(principal, task.getList());
+        return new GetTaskEditInfoResponse(task.safeId(), task.getName(), task.getDescription(),
+            task.getParent() != null ?
+                new GetTaskEditInfoResponse.ParentTask(task.getParent().safeId(), task.getParent().getName()) : null,
+            new GetTaskEditInfoResponse.SubList(task.getList().safeId(), task.getList().getName(),
+                task.getList().getGroup().safeId()));
     }
 }

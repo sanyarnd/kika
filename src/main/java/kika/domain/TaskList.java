@@ -2,6 +2,7 @@ package kika.domain;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -68,5 +69,9 @@ public class TaskList extends AutoPersistableAuditable {
 
     public boolean hasChild(long listId) {
         return this.getChildren().stream().anyMatch(child -> child.safeId() == listId || child.hasChild(listId));
+    }
+
+    public Set<Task> rootTasks() {
+        return getTasks().stream().filter(task -> task.getParent() == null).collect(Collectors.toSet());
     }
 }

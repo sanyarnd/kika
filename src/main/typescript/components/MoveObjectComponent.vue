@@ -1,108 +1,126 @@
 <template>
   <b-alert show>
-    <b-button v-b-modal.pick-destination block variant="info">Переместить в...</b-button>
+    <b-button v-b-modal:pick-destination block variant="info">Переместить в...</b-button>
     <b-modal
       id="pick-destination"
-      modal-class="modal-fullscreen"
       :title="`Перемещение ${object.type === 'TASK' ? 'задачи' : 'списка'}`"
-      ok-title="Применить"
-      cancel-title="Отмена"
       footer-class="border-0"
-      @ok="copyMoveData()"
+      modal-class="modal-fullscreen"
     >
       <set-list-view
-        :frozen-elem="getFrozenElem()"
-        :object="object"
-        :items="list_tree"
-        :move-to="moveTo"
+        v-model="moveTempModel"
+        :frozen-elem="frozenElem"
         :group="group"
+        :items="list_tree"
+        :object="object"
       />
-    </b-modal>
-    <span v-if="moveToFinal.type != null" class="text-center">
-      <b-row>
-        <b-col class="mt-3 text-truncate">
-          <span v-if="moveToFinal.type === 'TASK'" class="h4 mt-2">задачу(id={{ moveToFinal.id }})</span>
-          <span v-else-if="moveToFinal.type === 'LIST'" class="h4 mt-2">список(id={{ moveToFinal.id }})</span>
-          <span v-else class="h4 mt-2">группу(id={{ moveToFinal.id }})</span>
-        </b-col>
-      </b-row>
-      <div class="text-center flex-content">
-        <b-button variant="outline-dark" href="#" class="mt-3" @click="clearMoveData()">
-          <font-awesome-icon class="mr-1" icon="times"/>
-          Отмена
+      <template #modal-footer>
+        <b-button
+          :disabled="moveModel != null && moveModel.object.id === moveTempModel.object.id"
+          variant="info"
+          @click="submit"
+        >
+          Применить
         </b-button>
-      </div>
-    </span>
+        <b-button @click="$bvModal.hide('pick-destination')">Отмена</b-button>
+      </template>
+    </b-modal>
+    <b-table-simple v-if="submitted" borderless class="m-0">
+      <col width="100%" />
+      <col width="0%" />
+      <b-tr class="h5">
+        <b-td style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 1px">
+          <font-awesome-icon
+            :icon="
+              moveTempModel.type === 'TASK'
+                ? ['fas', 'circle']
+                : moveTempModel.type === 'LIST'
+                ? ['fas', 'list-ul']
+                : ['fas', 'users']
+            "
+          />
+          {{ moveTempModel.object.name }}
+        </b-td>
+        <b-td class="text-right" style="white-space: nowrap">
+          <font-awesome-icon
+            :icon="['fas', 'times']"
+            class="kika-icon text-danger ml-1 fa-lg"
+            style="cursor: pointer"
+            @click="removeSelectedModel"
+          />
+        </b-td>
+      </b-tr>
+    </b-table-simple>
   </b-alert>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import { Component, Prop, VModel } from "vue-property-decorator";
 import BreadcrumbNavbarComponent from "@/components/BreadcrumbNavbarComponent.vue";
-import SetListView, { Group, List, ObjectToMove, Task } from "@/components/SetListView.vue";
+import SetListView from "@/components/SetListView.vue";
+import {ElemInfo, FrozenElem, Group, GroupTree, List, MoveElemInfo, SubTaskListWithChildren, Task} from "@/models";
 
 @Component({
   components: { SetListView, BreadcrumbNavbarComponent }
 })
 export default class extends Vue {
   @Prop()
-  private readonly object!: ObjectToMove;
+  private readonly object!: ElemInfo;
 
   @Prop()
-  private list_tree!: List[];
+  private readonly list_tree!: SubTaskListWithChildren[];
 
   @Prop()
-  private group!: Group | null;
+  private readonly group!: GroupTree | null;
 
-  private moveTo: ElemInfo = { type: null, id: null };
-  private moveToFinal: ElemInfo = { type: null, id: null };
+  @Prop()
+  private readonly frozenElem!: FrozenElem;
 
-  private clearMoveData(): void {
-    this.moveToFinal.id = null;
-    this.moveToFinal.type = null;
+  @VModel()
+  private moveModel!: MoveElemInfo;
+  private moveTempModel: MoveElemInfo = {
+    object: { id: -1, name: "", children: [], tasks: [], groupId: 0, parentId: 0 },
+    type: "LIST"
+  };
+  private submitted: boolean = false;
+
+  mounted() {
+    this.resetTempModel();
   }
 
-  private copyMoveData(): void {
-    this.moveToFinal.id = this.moveTo.id;
-    this.moveToFinal.type = this.moveTo.type;
+  private resetTempModel() {
+    this.moveTempModel.object = this.moveModel.object;
+    this.moveTempModel.type = this.moveModel.type;
+    this.submitted = false;
   }
 
-  private getFrozenElem(): ElemInfo {
-    if (this.object.type == "LIST") {
-      if ((this.object.object as List).parentId == null) {
-        return { id: (this.object.object as List).groupId, type: "GROUP" };
-      }
-      return { id: (this.object.object as List).parentId, type: "LIST" };
-    } else if (this.object.type == "TASK") {
-      if ((this.object.object as Task).parentId == null) {
-        return { id: (this.object.object as Task).listId, type: "LIST" };
-      }
-      return { id: (this.object.object as Task).parentId, type: "TASK" };
-    }
-    console.log("MOVING INVALID ELEMENT");
-    return { id: null, type: null };
+  private removeSelectedModel() {
+    this.resetTempModel();
+    this.submitted = false;
+    this.$emit("clear-model");
+  }
+
+  // private get frozenElem(): ElemInfo {
+  //   if (this.object.type == "LIST") {
+  //     if ((this.object.object as List).parentId == null) {
+  //       return { id: (this.object.object as List).groupId, object: this.object.object, type: "GROUP" };
+  //     }
+  //     return { id: (this.object.object as List).parentId, object: this.object.object, type: "LIST" };
+  //   } else if (this.object.type == "TASK") {
+  //     if ((this.object.object as Task).parentId == null) {
+  //       return { id: (this.object.object as Task).listId, object: this.object.object, type: "LIST" };
+  //     }
+  //     return { id: (this.object.object as Task).parentId, object: this.object.object, type: "TASK" };
+  //   }
+  //   console.log("MOVING INVALID ELEMENT");
+  //   return { id: null, object: null, type: null };
+  // }
+
+  private submit(): void {
+    this.moveModel = { type: this.moveTempModel.type, object: this.moveTempModel.object };
+    this.submitted = true;
+    this.$bvModal.hide("pick-destination");
   }
 }
-
-export interface ElemInfo {
-  id: string | null;
-  type: MoveInfoType | null;
-}
-
-export type MoveInfoType = "TASK" | "LIST" | "GROUP";
 </script>
-
-<style lang="scss">
-.modal-fullscreen .modal-dialog {
-  max-width: 100%;
-  margin: 0;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  position: fixed;
-  z-index: 100000;
-}
-</style>

@@ -48,7 +48,9 @@ public class AccountService {
             .map(accountRole -> new GroupDto(accountRole.getId().getGroupId(),
                 accountRole.getGroup().getName(),
                 accountRole.getRole(),
-                accountRole.getGroup().getOwner().safeId()))
+                accountRole.getGroup().getOwner().safeId(),
+                accountRole.getGroup().getOwner().getName(),
+                accountRole.getGroup().getMessages().size()))
             .toList();
     }
 

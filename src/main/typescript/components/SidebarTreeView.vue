@@ -8,23 +8,24 @@
       >
         <b-row class="bg-transparent">
           <b-col class="text-truncate text-dark bg-transparent">
-            <font-awesome-icon :icon="item.icon" class="kika-icon"/>
+            <font-awesome-icon :icon="item.icon" class="kika-icon" />
             {{ item.name }}
           </b-col>
           <b-col class="text-right" cols="2">
-            <font-awesome-icon icon="chevron-right"
+            <font-awesome-icon
               v-if="item.children.length > 0"
-              :id="'chevron-' + item.id"
+              :id="'menu-chevron-' + item.id"
               class="ml-1 rotate"
-            ></font-awesome-icon>
+              icon="chevron-right"
+            />
           </b-col>
         </b-row>
       </b-list-group-item>
       <b-collapse :id="getChildrenCollapseId(item.id)">
         <b-list-group v-for="(subitem, key) in item.children" :id="subitem.id" :key="key" flush>
-          <b-list-group-item class="border-bottom text-secondary" button :href="subitem.link">{{
-            subitem.name
-          }}</b-list-group-item>
+          <b-list-group-item :to="subitem.link" class="border-bottom text-secondary">
+            {{ subitem.name }}
+          </b-list-group-item>
         </b-list-group>
       </b-collapse>
     </b-list-group>
@@ -45,7 +46,7 @@ export default class extends Vue {
   }
 
   private toggleRotation(id: number): void {
-    document.getElementById("chevron-" + id)!.classList.toggle("down");
+    document.getElementById("menu-chevron-" + id)!.classList.toggle("down");
   }
 }
 
@@ -53,20 +54,11 @@ export interface SidebarTreeItem {
   name: string;
   id: number;
   icon: string;
-  link: string;
+  link: SidebarTreeItemLink;
   children: SidebarTreeItem[];
 }
+
+export interface SidebarTreeItemLink {
+  name: string;
+}
 </script>
-<style scoped lang="scss">
-.rotate {
-  transition: all 0.2s linear;
-}
-
-.rotate.down {
-  transform: rotate(90deg);
-}
-
-.kika-icon {
-  width: 24px;
-}
-</style>

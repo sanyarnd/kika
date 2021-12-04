@@ -9,23 +9,22 @@
         @click.stop
       >
         <b-row>
-          <b-col class="text-truncate">
-            {{ item.name }}
-          </b-col>
+          <b-col class="text-truncate">{{ item.name }}</b-col>
           <b-col class="text-right" cols="2">
             <span>
-              <font-awesome-icon icon="chevron-right"
+              <font-awesome-icon
                 v-if="item.children.length > 0"
                 :id="'list-chevron-' + item.id"
                 :class="item.expanded ? 'down' : ''"
                 class="ml-1 rotate"
-              ></font-awesome-icon
-            ></span>
+                icon="chevron-right"
+              />
+            </span>
           </b-col>
         </b-row>
       </b-list-group-item>
       <b-collapse :id="getListChildrenCollapseId(item.id)" class="ml-3">
-        <list-tree-view :items="item.children" :list_id="list_id" :selected_list="selected_list"></list-tree-view>
+        <list-tree-view :items="item.children" :list_id="list_id" :selected_list="selected_list" />
       </b-collapse>
     </b-list-group>
   </span>
@@ -38,14 +37,12 @@ import ListTreeView from "@/components/ListTreeView.vue";
 
 @Component({ name: "ListTreeView", components: { ListTreeView } })
 export default class extends Vue {
-  @Prop({ default: [] })
-  private readonly items!: ListTreeItem[];
-
-  @Prop()
-  private readonly list_id!: number;
-
   @Prop()
   public selected_list!: CurrentSelection;
+  @Prop({ default: [] })
+  private readonly items!: ListTreeItem[];
+  @Prop()
+  private readonly list_id!: number;
 
   private getListChildrenCollapseId(id: number): string {
     return "list-node-" + id + "-children-collapse";
@@ -72,12 +69,3 @@ export interface CurrentSelection {
   id: number | null;
 }
 </script>
-<style scoped lang="scss">
-.rotate {
-  transition: all 0.2s linear;
-}
-
-.rotate.down {
-  transform: rotate(90deg);
-}
-</style>

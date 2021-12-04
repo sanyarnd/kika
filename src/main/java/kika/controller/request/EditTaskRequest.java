@@ -8,10 +8,11 @@ public record EditTaskRequest(
     String name,
 
     @Nullable
-    @Length(min = 1, max = 512)
+    @Length(max = 512)
     String description,
 
-    long listId,
+    @Nullable
+    Long listId,
 
     @Nullable
     Long parentId

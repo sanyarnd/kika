@@ -1,15 +1,27 @@
 import Vue from "vue";
-import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
-
+import { BootstrapVue } from "bootstrap-vue";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
-import Login from "@/pages/login/views/Login.vue";
 
+import { FontAwesomeIcon, FontAwesomeLayers } from "@fortawesome/vue-fontawesome";
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { fas } from "@fortawesome/free-solid-svg-icons";
+import { fab } from "@fortawesome/free-brands-svg-icons";
+import { far } from "@fortawesome/free-regular-svg-icons";
+
+import App from "@/pages/login/App.vue";
 import { router } from "@/pages/login/router";
+import { store } from "@/store";
+
+// import all FontsAwesome icons
+library.add(fas, fab, far);
+Vue.component("FontAwesomeIcon", FontAwesomeIcon);
+Vue.component("FontAwesomeLayers", FontAwesomeLayers);
+
 Vue.use(BootstrapVue);
-Vue.use(IconsPlugin);
 
 new Vue({
   router,
-  render: h => h(Login)
+  store,
+  render: h => h(App)
 }).$mount("#app");

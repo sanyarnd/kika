@@ -5,7 +5,7 @@ Vue.use(VueRouter);
 
 const routes: RouteConfig[] = [
   {
-    path: "/",
+    path: "",
     name: "login",
     component: () => import("@/pages/login/views/Login.vue")
   },
@@ -13,6 +13,11 @@ const routes: RouteConfig[] = [
     path: "/register",
     name: "register",
     component: () => import("@/pages/login/views/Register.vue")
+  },
+  {
+    path: "*",
+    name: "404",
+    component: () => import("@/pages/login/views/404.vue")
   }
 ];
 

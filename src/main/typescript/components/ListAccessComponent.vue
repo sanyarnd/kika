@@ -1,65 +1,67 @@
 <template>
-  <b-card
-    v-b-toggle:list-1-special-access
-    no-body
-    :header="`Настроить особый доступ (${specialAccess.set ? 'включен' : 'отключен'})`"
-  >
-    <b-collapse id="list-1-special-access">
-      <b-list-group v-for="(user, key) in specialAccess.accounts" :id="user.id" :key="key" flush>
+  <span>
+    <b-alert show variant="info">
+      <b-form-group v-slot="{ accessMode }" label="Доступ к списку:">
+        <b-form-radio v-model="specialAccess.set" :aria-describedby="accessMode" :value="false" name="some-radios">
+          без ограничений
+        </b-form-radio>
+        <b-form-radio v-model="specialAccess.set" :aria-describedby="accessMode" :value="true" name="some-radios">
+          по разрешению
+        </b-form-radio>
+      </b-form-group>
+
+      <b-list-group v-for="(user, key) in specialAccess.accounts" :key="key" flush>
         <b-list-group-item
           v-if="specialAccess.set"
-          :style="{ 'text-decoration': specialAccess.set && user.specialAccess ? 'none' : 'line-through' }"
-          class="text-truncate"
+          :class="key === 0 ? 'rounded-top' : key === specialAccess.accounts.length - 1 ? 'rounded-bottom' : ''"
+          :disabled="appStore.getters.account.id === user.id"
           button
-          @click="user.specialAccess = !user.specialAccess"
-          @click.stop
+          class="border-0 text-dark"
+          @click="switchAccess(user)"
         >
-          {{ user.name }}
-        </b-list-group-item>
-        <b-list-group-item v-else disabled class="text-truncate" @click.stop>
+          <font-awesome-icon
+            v-if="user.hasAccess || appStore.getters.account.id === user.id"
+            :icon="['far', 'check-square']"
+            class="kika-icon"
+          />
+          <font-awesome-icon v-else :icon="['far', 'square']" class="kika-icon" />
           {{ user.name }}
         </b-list-group-item>
         <b-list-group-item
-          v-if="key === specialAccess.accounts.length - 1"
-          button
-          @click="specialAccess.set = !specialAccess.set"
-          @click.stop
+          v-else
+          :class="key === 0 ? 'rounded-top' : key === specialAccess.accounts.length - 1 ? 'rounded-bottom' : ''"
+          class="border-0 text-secondary"
         >
-          <span v-if="specialAccess.set">
-            <font-awesome-icon class="mr-1" icon="toggle-on"/>
-            Отключить
-          </span>
-          <span v-if="!specialAccess.set">
-            <font-awesome-icon class="mr-1" icon="toggle-off"/>
-            Включить
-          </span>
+          <font-awesome-icon :icon="['far', 'check-square']" class="kika-icon" />
+          {{ user.name }}
         </b-list-group-item>
       </b-list-group>
-    </b-collapse>
-  </b-card>
+    </b-alert>
+  </span>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import { Component, Prop, VModel } from "vue-property-decorator";
 import SidebarComponent from "@/components/SidebarComponent.vue";
 import TreeView from "@/components/TaskTreeView.vue";
 import ListTreeView from "@/components/ListTreeView.vue";
+import { appModule } from "@/store/app-module";
+import { AccessData, ParentInfoType, UserSpecialAccess } from "@/models";
 
 @Component({ components: { TreeView, SidebarComponent, ListTreeView } })
 export default class extends Vue {
-  @Prop()
-  private readonly specialAccess!: SpecialAccess;
-}
+  private readonly appStore = appModule.context(this.$store);
 
-export interface UserWithSpecialAccess {
-  id: string;
-  name: string;
-  specialAccess: boolean;
-}
+  @VModel()
+  private specialAccess!: AccessData;
 
-export interface SpecialAccess {
-  set: boolean;
-  accounts: UserWithSpecialAccess[];
+  @Prop({ default: "GROUP" })
+  private readonly parentType!: ParentInfoType;
+
+  private switchAccess(user: UserSpecialAccess) {
+    console.log(user);
+    user.hasAccess = !user.hasAccess;
+  }
 }
 </script>

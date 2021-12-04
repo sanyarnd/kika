@@ -1,5 +1,5 @@
 <template>
-  <login-dialog></login-dialog>
+  <login-dialog />
 </template>
 
 <script lang="ts">

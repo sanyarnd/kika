@@ -2,6 +2,7 @@ package kika.domain;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -49,5 +50,24 @@ public class Group extends AutoPersistableAuditable {
 
     public void removeMember(AccountRole member) {
         members.remove(member);
+    }
+
+    public AccountRole.Role getRole(long id) {
+        return this.getMembers().stream()
+            .filter(accountRole -> accountRole.getAccount().safeId() == id)
+            .findFirst()
+            .map(AccountRole::getRole)
+            .orElse(null);
+    }
+
+    public AccountRole getMember(long id) {
+        return this.getMembers().stream()
+            .filter(accountRole -> accountRole.getAccount().safeId() == id)
+            .findFirst()
+            .orElse(null);
+    }
+
+    public Set<TaskList> rootLists() {
+        return getTaskLists().stream().filter(taskList -> taskList.getParent() == null).collect(Collectors.toSet());
     }
 }

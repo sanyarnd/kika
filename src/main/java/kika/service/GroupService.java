@@ -1,15 +1,23 @@
 package kika.service;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import kika.controller.request.AddGroupMemberRequest;
+import kika.controller.response.GetGroupEditInfoResponse;
+import kika.controller.response.GetGroupInfoResponse;
+import kika.controller.response.GetGroupTreeResponse;
 import kika.controller.response.GetTaskListResponse;
+import kika.controller.response.GroupMemberResponse;
+import kika.controller.response.MessageBulk;
 import kika.domain.Account;
 import kika.domain.AccountRole;
+import kika.domain.AutoPersistable;
 import kika.domain.Group;
 import kika.domain.Task;
 import kika.domain.TaskList;
@@ -17,10 +25,13 @@ import kika.repository.AccountRepository;
 import kika.repository.AccountRoleRepository;
 import kika.repository.GroupRepository;
 import kika.repository.TaskListRepository;
+import kika.repository.TaskRepository;
 import kika.security.principal.KikaPrincipal;
+import kika.service.dto.GroupDto;
 import kika.service.dto.TaskDto;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +43,7 @@ public class GroupService {
     private final AccountRepository accountRepository;
     private final AccountRoleRepository accountRoleRepository;
     private final TaskListRepository taskListRepository;
+    private final TaskRepository taskRepository;
 
     private void checkOwnerAccess(KikaPrincipal principal, Group group) {
         if (principal.accountId() != group.getOwner().safeId()) {
@@ -52,6 +64,7 @@ public class GroupService {
             return List.of();
         }
         return task.getChildren().stream()
+            .sorted(Comparator.comparingLong(AutoPersistable::safeId))
             .map(child -> new TaskDto(child.safeId(),
                 child.getName(),
                 child.getDescription(),
@@ -67,6 +80,7 @@ public class GroupService {
             return List.of();
         }
         return list.getChildren().stream().filter(child -> child.accountHasAccess(accId))
+            .sorted(Comparator.comparingLong(AutoPersistable::safeId))
             .map(child -> new GetTaskListResponse(child.safeId(),
                 child.getName(),
                 child.getParentId(),
@@ -84,11 +98,19 @@ public class GroupService {
     }
 
     @Transactional
-    public long create(@NotNull String name, KikaPrincipal principal) {
+    public long create(@NotNull String name, @Nullable List<AddGroupMemberRequest> members, KikaPrincipal principal) {
         Account owner = accountRepository.getById(principal.accountId());
         Group group = groupRepository.save(new Group(name, owner));
         AccountRole ownerRole = new AccountRole(group, owner);
         group.addMember(ownerRole);
+
+        if (members != null) {
+            members.forEach(newMember -> {
+                AccountRole member =
+                    new AccountRole(group, accountRepository.getById(newMember.getId()), newMember.getRole());
+                group.addMember(member);
+            });
+        }
 
         return group.safeId();
     }
@@ -101,10 +123,11 @@ public class GroupService {
     }
 
     @Transactional
-    public Group get(long id, KikaPrincipal principal) {
+    public GroupDto get(long id, KikaPrincipal principal) {
         Group group = groupRepository.getById(id);
         checkMemberAccess(principal, group);
-        return group;
+        return new GroupDto(group.safeId(), group.getName(), group.getRole(principal.accountId()),
+            group.getOwner().safeId(), group.getOwner().getName(), group.getMessages().size());
     }
 
     @Transactional
@@ -139,14 +162,10 @@ public class GroupService {
         }
         Group group = groupRepository.getById(groupId);
         checkOwnerAccess(principal, group);
-        Account member = accountRepository.getById(newMemberId);
-        AccountRole existingMember = group.getMembers().stream()
-            .filter(accountRole -> accountRole.getAccount().safeId() == member.safeId())
-            .findFirst().orElse(null);
-        if (existingMember == null) {
-            group.addMember(new AccountRole(group, member, role));
+        if (group.getMember(newMemberId) == null) {
+            group.addMember(new AccountRole(group, accountRepository.getById(newMemberId), role));
         } else {
-            existingMember.setRole(role);
+            group.getMember(newMemberId).setRole(role);
         }
     }
 
@@ -217,12 +236,14 @@ public class GroupService {
         checkMemberAccess(principal, group);
         return group.getTaskLists().stream()
             .filter(list -> list.accountHasAccess(principal.accountId()) && list.getParent() == null)
+            .sorted(Comparator.comparingLong(AutoPersistable::safeId))
             .map(list -> new GetTaskListResponse(list.safeId(), list.getName(),
                 list.getParentId(),
                 list.getGroup().safeId(),
                 getFullChildrenTree(list, principal.accountId()),
                 list.getTasks().stream()
                     .filter(task -> task.getParent() == null)
+                    .sorted(Comparator.comparingLong(AutoPersistable::safeId))
                     .map(task -> new TaskDto(task.safeId(),
                         task.getName(),
                         task.getDescription(),
@@ -241,12 +262,118 @@ public class GroupService {
             group.setName(name);
         }
         if (members != null) {
-            group.getMembers().removeAll(group.getMembers().stream()
-                .filter(m -> m.getRole() != AccountRole.Role.OWNER)
-                .collect(Collectors.toSet()));
+            Set<Long> ids = Arrays.stream(members).map(AddGroupMemberRequest::getId).collect(Collectors.toSet());
+            group.getMembers().stream()
+                .filter(accountRole -> !ids.contains(accountRole.getId().getAccountId()) &&
+                    (accountRole.getId().getAccountId() != group.getOwner().safeId()))
+                .forEach(group::removeMember);
             for (AddGroupMemberRequest member : members) {
                 addMember(groupId, member.getId(), member.getRole(), principal);
             }
         }
+    }
+
+    @Transactional
+    public GetGroupInfoResponse getInfo(long id, long offset, long count, KikaPrincipal principal) {
+        Group group = groupRepository.getById(id);
+        checkMemberAccess(principal, group);
+        return new GetGroupInfoResponse(id, group.getName(), group.getRole(principal.accountId()),
+            group.getTaskLists().stream()
+                .filter(taskList -> taskList.getParent() == null && taskList.accountHasAccess(principal.accountId()))
+                .map(taskList -> new GetGroupInfoResponse.SubTaskList(taskList.safeId(), taskList.getName()))
+                .toList(),
+            new MessageBulk(group.getMessages().stream()
+                .sorted((m1, m2) -> Long.compare(m2.safeId(), m1.safeId()))
+                .skip(offset)
+                .limit(count)
+                .map(
+                    message -> new MessageBulk.SubMessage(message.safeId(), message.getCreatedDate(), message.getBody(),
+                        accountRepository.findById(Long.parseLong(message.getCreatedBy())).map(Account::getName)
+                            .orElse("(аккаунт удален)")))
+                .toList(),
+                group.getMessages().size(),
+                0));
+    }
+
+    @Transactional
+    public void deleteByGroup(long groupId, KikaPrincipal principal) {
+        Group group = groupRepository.getById(groupId);
+        checkOwnerAccess(principal, group);
+        group.getMessages().clear();
+    }
+
+    @Transactional
+    public GetGroupEditInfoResponse getEditInfo(long id, KikaPrincipal principal) {
+        Group group = groupRepository.getById(id);
+        checkOwnerAccess(principal, group);
+        return new GetGroupEditInfoResponse(group.safeId(), group.getName(),
+            group.getMembers().stream()
+                .map(accountRole -> new GroupMemberResponse(accountRole.getId().getAccountId(), accountRole.getRole(),
+                    accountRole.getAccount().getName()))
+                .toList(),
+            group.getMessages().size());
+    }
+
+    private List<GetGroupTreeResponse.SubTaskList> subTaskListTree(
+        TaskList parent,
+        Long skipList,
+        Long skipTask,
+        boolean keepTasks
+    ) {
+        if (parent.getChildren().isEmpty()) {
+            return List.of();
+        }
+        return parent.getChildren().stream()
+            .filter(taskList -> !Objects.equals(skipList, taskList.safeId()))
+            .map(taskList -> new GetGroupTreeResponse.SubTaskList(taskList.safeId(), taskList.getName(),
+                subTaskListTree(taskList, skipList, skipTask, keepTasks),
+                keepTasks ? taskList.rootTasks().stream()
+                    .map(task -> new GetGroupTreeResponse.SubTask(task.safeId(), task.getName(),
+                        subTaskTree(task, skipTask)))
+                    .toList() : List.of()))
+            .toList();
+    }
+
+    private List<GetGroupTreeResponse.SubTask> subTaskTree(Task parent, Long skipTask) {
+        if (parent.getChildren().isEmpty()) {
+            return List.of();
+        }
+        return parent.getChildren().stream()
+            .filter(task -> !Objects.equals(task.safeId(), skipTask))
+            .map(task -> new GetGroupTreeResponse.SubTask(task.safeId(), task.getName(), subTaskTree(task, skipTask)))
+            .toList();
+    }
+
+    @Transactional
+    public GetGroupTreeResponse getTree(long groupId, long listId, KikaPrincipal principal) {
+        Group group = groupRepository.getById(groupId);
+        checkMemberAccess(principal, group);
+        if (taskListRepository.getById(listId).getGroup().safeId() != groupId) {
+            throw new IllegalArgumentException("Group (id=%d) has no list (id=%d)".formatted(groupId, listId));
+        }
+
+        return new GetGroupTreeResponse(group.safeId(), group.getName(),
+            group.rootLists().stream()
+                .filter(taskList -> taskList.safeId() != listId)
+                .map(taskList -> new GetGroupTreeResponse.SubTaskList(taskList.safeId(), taskList.getName(),
+                    subTaskListTree(taskList, listId, null, false),
+                    List.of()))
+                .toList());
+    }
+
+    @Transactional
+    public GetGroupTreeResponse getTreeWithTasks(long groupId, long taskId, KikaPrincipal principal) {
+        Group group = groupRepository.getById(groupId);
+        checkMemberAccess(principal, group);
+        if (taskRepository.getById(taskId).getList().getGroup().safeId() != groupId) {
+            throw new IllegalArgumentException("Group (id=%d) has no task (id=%d)".formatted(groupId, taskId));
+        }
+
+        return new GetGroupTreeResponse(group.safeId(), group.getName(),
+            group.rootLists().stream()
+                .map(taskList -> new GetGroupTreeResponse.SubTaskList(taskList.safeId(), taskList.getName(),
+                    subTaskListTree(taskList, null, taskId, true),
+                    List.of()))
+                .toList());
     }
 }

@@ -75,6 +75,18 @@ public class Task extends AutoPersistableAuditable {
         });
     }
 
+    public boolean isSubscribed(long id) {
+        return this.getSubscribers().stream()
+            .map(accountTaskSubscriber -> accountTaskSubscriber.getAccount().safeId())
+            .anyMatch(aLong -> aLong == id);
+    }
+
+    public boolean isAssigned(long id) {
+        return this.getAssignees().stream()
+            .map(accountTaskAssignee -> accountTaskAssignee.getAccount().safeId())
+            .anyMatch(aLong -> aLong == id);
+    }
+
     public enum Status {
         NOT_COMPLETED,
         COMPLETED,

@@ -1,84 +1,112 @@
-export interface ApiResponse {
-  title: string;
-  detail: string;
-  status: string;
+import { List, Status } from "@/models";
+
+export interface AssignedOrSubscribedTasksResponse {
+  name: string;
+  id: number;
+  status: Status;
 }
 
-export interface AuthenticationPayload {
-  username: string;
-  password: string;
+export interface CreateTaskPayload {
+  name: string;
+  description: string;
+  listId: number | string;
+  parentId: number | string | null;
 }
 
-export interface AccessToken {
-  token: string;
+export interface EditTaskPayload {
+  id: number | string;
+  name: string;
+  description: string | null;
+  parentId: number | string | null;
+  listId: number | string | null;
 }
 
-export interface FetchVideosPayload {
-  tag: string;
-  scopeTag: string;
-  startOffset: number;
-  maxResults: number;
-  orderBy: string;
+export interface EditTaskListPayload {
+  id: number | string;
+  name: string;
+  parentId: number | string | null;
+  accessList: number[] | null;
 }
 
-export interface NicoVideo {
-  contentId: string;
-  title: string;
-  tags: string;
+export interface CreateTaskListPayload {
+  name: string;
+  groupId: number | string;
+  parentId: number | string | null;
+  accessList: number[] | null;
 }
 
-export interface NicoVideoWithTidyTags {
-  contentId: string;
-  title: string;
-  tags: DisplayableTag[];
-}
-
-export interface SongForApiContractSimplified {
+export interface GetGroupMemberResponse {
   id: number;
   name: string;
-  tagInTags: boolean;
-  songType: string;
-  artistString: string;
+  role: GroupRole;
 }
 
-export interface VideoWithEntry {
-  video: NicoVideoWithTidyTags;
-  songEntry: SongForApiContractSimplified | null;
+export interface GetGroupMembersResponse {
+  members: GetGroupMemberResponse[];
+  count: number;
 }
 
-export interface AssignableTag {
-  additionalNames: string;
-  categoryName: string;
-  createDate: string;
-  defaultNameLanguage: string;
+export interface GetAccountResponse {
   id: number;
   name: string;
-  status: string;
-  targets: number;
-  urlSlug: string;
-  usageCount: number;
-  version: number;
 }
 
-export interface VideosWithEntries {
-  items: VideoWithEntry[];
-  totalVideoCount: number;
-  tags: AssignableTag[];
-  tagMappings: string[];
-  safeScope: string;
-}
-
-export interface AssignTagPayload {
-  songId: number;
-  tags: AssignableTag[];
-}
-
-export interface DisplayableTag {
+export interface GetAccountGroupResponse {
+  id: number;
   name: string;
-  variant: string;
+  role: GroupRole;
+  ownerId: number;
 }
 
-export interface Ordering {
+export interface GetAccountGroupsResponse {
+  groups: GetAccountGroupResponse[];
+  count: number;
+}
+
+export type GroupRole = "OWNER" | "MEMBER" | "RESTRICTED";
+
+export interface GetGroupListsResponse {
+  lists: List[];
+  count: number;
+}
+
+export interface GetGroupResponse {
   name: string;
+  id: number;
+  role: GroupRole;
+  messageCount: number;
+  ownerId: number;
+}
+
+export interface PostGroupMessagePayload {
+  groupId: number;
   value: string;
+}
+
+export interface GetGroupMessagesPayload {
+  groupId: number;
+}
+
+export interface GetGroupMessagesResponse {
+  messages: GetMessage[];
+  count: number;
+}
+
+export interface GetMessage {
+  id: number;
+  groupId: number;
+  createdDate: string;
+  body: string;
+  sender: string;
+}
+
+export interface CreateGroupPayload {
+  name: string;
+  members: GetGroupMemberResponse[];
+}
+
+export interface ErrorResponse {
+  title: string;
+  status: number;
+  detail: string;
 }

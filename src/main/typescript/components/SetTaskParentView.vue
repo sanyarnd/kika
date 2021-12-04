@@ -3,24 +3,25 @@
     <b-list-group v-for="(item, key) in items" :id="taskElementId(item.id)" :key="key" flush @click.stop>
       <b-list-group-item
         v-if="task.id !== item.id"
+        href="#"
         :active="highlight(item.id)"
         :disabled="frozenElem.type === 'GROUP' && frozenElem.id === item.id"
         :style="{
-          'text-decoration': frozenElem.type === 'GROUP' && frozenElem.id === item.id ? 'line-through' : 'none'
+          'text-decoration': frozenElem.type === 'TASK' && frozenElem.id === item.id ? 'line-through' : 'none'
         }"
       >
-        <b-row v-b-toggle="getTaskChildrenCollapseId(item.id)" @click="toggleSelection(item.id)">
+        <b-row v-b-toggle="getTaskChildrenCollapseId(item.id)" @click="toggleSelection(item)">
           <b-col class="text-truncate">
-            <font-awesome-icon icon="circle" class="kika-icon"/>
+            <font-awesome-icon class="kika-icon" icon="circle" />
             {{ item.name }}
           </b-col>
           <b-col v-if="item.children.length > 0" class="text-right" cols="2">
-            <font-awesome-icon icon="chevron-right" :id="taskChevronId(item.id)" class="ml-1 rotate"/>
+            <font-awesome-icon :id="taskChevronId(item.id)" class="ml-1 rotate" icon="chevron-right" />
           </b-col>
         </b-row>
       </b-list-group-item>
       <b-collapse :id="getTaskChildrenCollapseId(item.id)" class="ml-3">
-        <set-task-parent-view :task="task" :items="item.children" :move-to="moveTo" :frozen-elem="frozenElem" />
+        <set-task-parent-view :frozen-elem="frozenElem" :items="item.children" v-model="moveTo" :task="task" />
       </b-collapse>
     </b-list-group>
   </span>
@@ -28,79 +29,53 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import { Component, Prop, VModel } from "vue-property-decorator";
 import SetTaskParentView from "@/components/SetTaskParentView.vue";
-import { Status } from "@/pages/app/views/Task.vue";
-import { ElemInfo, MoveInfoType } from "@/components/MoveObjectComponent.vue";
+import {ElemInfo, FrozenElem, MoveElemInfo, SubTaskWithChildren, Task, TaskEditInfo} from "@/models";
 
 @Component({ name: "SetTaskParentView", components: { SetTaskParentView } })
 export default class extends Vue {
   @Prop()
-  private readonly task!: Task;
+  private readonly task!: ElemInfo;
 
   @Prop({ default: [] })
-  private readonly items!: Task[];
+  private readonly items!: SubTaskWithChildren[];
+
+  @VModel()
+  private moveTo!: MoveElemInfo;
 
   @Prop()
-  private moveTo!: ElemInfo;
+  private readonly frozenElem!: FrozenElem;
 
-  @Prop()
-  private readonly frozenElem!: ElemInfo;
-
-  private toggleRotation(id: string): void {
+  private toggleRotation(id: number): void {
     const chevron = document.getElementById(this.taskChevronId(id));
     if (chevron != null) {
       chevron.classList.toggle("down");
     }
   }
 
-  private taskChevronId(id: string): string {
+  private taskChevronId(id: number): string {
     return `task-chevron-${id}`;
   }
 
-  private toggleSelection(id: string): void {
-    this.toggleRotation(id);
-    this.moveTo.id = id;
-    this.moveTo.type = "TASK";
+  private toggleSelection(object: Task): void {
+    if (object.id == this.frozenElem.id) {
+      return;
+    }
+    this.toggleRotation(object.id);
+    this.moveTo = { object: object, type: "TASK" };
   }
 
-  private getTaskChildrenCollapseId(id: string): string {
+  private getTaskChildrenCollapseId(id: number): string {
     return "task-" + id + "-children";
   }
 
-  private taskElementId(id: string): string {
+  private taskElementId(id: number): string {
     return `task-${id}`;
   }
 
-  private highlight(id: string): boolean {
-    return this.moveTo.type == "TASK" && this.moveTo.id == id;
+  private highlight(id: number): boolean {
+    return this.moveTo.type == "TASK" && this.moveTo.object?.id == id;
   }
 }
-
-export interface Task {
-  id: string;
-  name: string;
-  description: string;
-  status: Status;
-  children: Task[];
-  listId: string;
-  parentId: string | null;
-}
-
-export interface CurrentSelection {
-  id: string | null;
-}
 </script>
-<style scoped lang="scss">
-.rotate {
-  transition: all 0.2s linear;
-}
-
-.rotate.down {
-  transform: rotate(90deg);
-}
-
-.kika-icon {
-  width: 24px;
-}
-</style>
