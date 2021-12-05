@@ -39,7 +39,7 @@ import Vue from "vue";
 import { Component, Prop, VModel } from "vue-property-decorator";
 import PickListParentView from "@/components/PickListParentView.vue";
 import PickTaskParentView from "@/components/PickTaskParentView.vue";
-import {ElemInfo, Group, List, ParentInfoType, SubTaskListWithChildren, Task} from "@/models";
+import { ElemInfo, Group, List, ParentInfoType, SubTaskListWithChildren, Task } from "@/models";
 
 @Component({ name: "PickListParentView", components: { PickListParentView, PickTaskParentView } })
 export default class extends Vue {

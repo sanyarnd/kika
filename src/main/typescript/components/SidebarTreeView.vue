@@ -22,7 +22,7 @@
         </b-row>
       </b-list-group-item>
       <b-collapse :id="getChildrenCollapseId(item.id)">
-        <b-list-group v-for="(subitem, key) in item.children" :id="subitem.id" :key="key" flush>
+        <b-list-group v-for="(subitem, kkey) in item.children" :id="subitem.id" :key="kkey" flush>
           <b-list-group-item :to="subitem.link" class="border-bottom text-secondary">
             {{ subitem.name }}
           </b-list-group-item>
@@ -46,7 +46,10 @@ export default class extends Vue {
   }
 
   private toggleRotation(id: number): void {
-    document.getElementById("menu-chevron-" + id)!.classList.toggle("down");
+    const chevron = document.getElementById("menu-chevron-" + id);
+    if (chevron != null) {
+      chevron.classList.toggle("down");
+    }
   }
 }
 

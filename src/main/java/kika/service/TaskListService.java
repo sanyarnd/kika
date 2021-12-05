@@ -1,9 +1,11 @@
 package kika.service;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import kika.controller.request.EditTaskListRequest;
@@ -44,7 +46,9 @@ public class TaskListService {
         Set<TaskList> children
     ) {
         if (specialAccess.removeIf(accSpAcc -> accSpAcc.getAccount().safeId() == id)) {
-            children.forEach(child -> revokeSpecialAccessRecursively(child.getSpecialAccess(), id, children));
+            for (TaskList child : children) {
+                revokeSpecialAccessRecursively(child.getSpecialAccess(), id, children);
+            }
         }
     }
 
@@ -230,12 +234,14 @@ public class TaskListService {
                 throw new IllegalArgumentException("The new access set must be a subset of the parent access set");
             }
             // Recursively revoke access from accounts from this list and all its children
-            for (AccountSpecialAccess accountSpecialAccess : list.getSpecialAccess()) {
-                if (!membersWithAccessIds.contains(accountSpecialAccess.getAccount().safeId())) {
-                    revokeSpecialAccessRecursively(list.getSpecialAccess(),
-                        accountSpecialAccess.getAccount().safeId(), list.getChildren());
-                }
+            List<AccountSpecialAccess> accountSpecialAccesses = list.getSpecialAccess().stream().filter(
+                    accountSpecialAccess -> !membersWithAccessIds.contains(accountSpecialAccess.getAccount().safeId()))
+                .toList();
+            for (AccountSpecialAccess specialAccess : accountSpecialAccesses) {
+                revokeSpecialAccessRecursively(list.getSpecialAccess(),
+                    specialAccess.getAccount().safeId(), list.getChildren());
             }
+
             // Add access to accounts that do not have it yet
             Set<Long> currentAccessIds = list.getSpecialAccess().stream()
                 .map(accSpAcc -> accSpAcc.getAccount().safeId())

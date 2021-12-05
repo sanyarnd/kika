@@ -15,9 +15,9 @@
 
             <div class="mb-2">Идентификатор в системе:</div>
             <b-input-group class="mb-3">
-              <b-form-input id="nn" readonly :value="accountId"/>
+              <b-form-input id="nn" readonly :value="accountId" />
               <b-input-group-append>
-                <b-button variant="info" v-clipboard:copy="accountId">
+                <b-button v-clipboard:copy="accountId" variant="info">
                   <font-awesome-icon :icon="['far', 'copy']" />
                 </b-button>
               </b-input-group-append>
@@ -38,18 +38,13 @@
           <b-button v-b-modal:confirmDeletion variant="danger" block>
             <font-awesome-icon :icon="['fas', 'trash-alt']" />
           </b-button>
-          <b-modal
-            id="confirmDeletion"
-            centered
-            hide-header
-            hide-footer
-            hide-header-close
-            :busy="true"
-          >
+          <b-modal id="confirmDeletion" centered hide-header hide-footer hide-header-close :busy="true">
             Пожалуйста, подтвердите удаление аккаунта
             <b-button-group class="mt-3 d-flex">
               <!--              <b-button variant="danger" class="text-center" @click="deleteGroup(group.id)">Удалить</b-button>-->
-              <b-button variant="outline-dark" class="text-center" @click="$bvModal.hide('confirmDeletion')">Отмена</b-button>
+              <b-button variant="outline-dark" class="text-center" @click="$bvModal.hide('confirmDeletion')"
+                >Отмена</b-button
+              >
             </b-button-group>
           </b-modal>
         </b-card>

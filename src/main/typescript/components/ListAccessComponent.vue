@@ -1,6 +1,6 @@
 <template>
   <span>
-    <b-alert show variant="info">
+    <b-alert variant="secondary" class="" show>
       <b-form-group v-slot="{ accessMode }" label="Доступ к списку:">
         <b-form-radio v-model="specialAccess.set" :aria-describedby="accessMode" :value="false" name="some-radios">
           без ограничений
@@ -13,10 +13,11 @@
       <b-list-group v-for="(user, key) in specialAccess.accounts" :key="key" flush>
         <b-list-group-item
           v-if="specialAccess.set"
-          :class="key === 0 ? 'rounded-top' : key === specialAccess.accounts.length - 1 ? 'rounded-bottom' : ''"
+          :class="(key === 0 ? 'rounded-top' : key === specialAccess.accounts.length - 1 ? 'rounded-bottom' : '') +
+           (appStore.getters.account.id === user.id ? 'text-secondary' : 'text-dark')"
           :disabled="appStore.getters.account.id === user.id"
           button
-          class="border-0 text-dark"
+          class="border-0"
           @click="switchAccess(user)"
         >
           <font-awesome-icon

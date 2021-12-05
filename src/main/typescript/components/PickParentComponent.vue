@@ -1,7 +1,7 @@
 <template>
   <b-form-group>
-    <b-alert class="mb-n1" show>
-      <b-button v-b-modal:pick-parent block data-vv-name="pick-parent" variant="info">Добавить в...</b-button>
+    <b-alert class="mb-n1 mt-n1 bg-transparent" variant="secondary" show>
+      <div class="mb-2">Сохранить в:</div>
       <b-modal
         id="pick-parent"
         :title="'Выбор родительского компонента'"
@@ -14,32 +14,37 @@
           <b-button @click="$bvModal.hide('pick-parent')">Отмена</b-button>
         </template>
       </b-modal>
-      <b-table-simple v-if="finalModel != null" borderless class="m-0">
-        <col width="100%" />
-        <col width="0%" />
-        <b-tr class="h5">
-          <b-td style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 1px">
-            <font-awesome-icon
-              :icon="
-                finalModel.type === 'TASK'
-                  ? ['fas', 'circle']
-                  : finalModel.type === 'LIST'
-                  ? ['fas', 'list-ul']
-                  : ['fas', 'users']
-              "
-            />
-            <span v-if="finalModel.object != null"> {{ finalModel.object.name }}</span>
-          </b-td>
-          <b-td class="text-right" style="white-space: nowrap">
-            <font-awesome-icon
-              :icon="['fas', 'times']"
-              class="kika-icon text-danger ml-1 fa-lg"
-              style="cursor: pointer"
-              @click="clearParentData"
-            />
-          </b-td>
-        </b-tr>
-      </b-table-simple>
+      <!--      <b-table-simple v-if="finalModel != null" borderless class="m-0">-->
+      <!--        <col width="100%" />-->
+      <!--        <col width="0%" />-->
+      <!--        <b-tr class="h5">-->
+      <!--          <b-td style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 1px">-->
+      <span class="h5 text-truncate pl-1 pr-1">
+        <font-awesome-icon
+          :icon="
+            finalModel.type === 'TASK'
+              ? ['fas', 'circle']
+              : finalModel.type === 'LIST'
+              ? ['fas', 'list-ul']
+              : ['fas', 'users']
+          "
+        />
+        <span v-if="finalModel.object != null"> {{ finalModel.object.name }}</span>
+      </span>
+      <!--          </b-td>-->
+      <!--          <b-td class="text-right" style="white-space: nowrap">-->
+      <!--            <font-awesome-icon-->
+      <!--              :icon="['fas', 'times']"-->
+      <!--              class="kika-icon text-danger ml-1 fa-lg"-->
+      <!--              style="cursor: pointer"-->
+      <!--              @click="clearParentData"-->
+      <!--            />-->
+      <!--          </b-td>-->
+      <!--        </b-tr>-->
+      <!--      </b-table-simple>-->
+      <b-button v-b-modal:pick-parent size="sm" block data-vv-name="pick-parent" variant="info" class="mt-2"
+        >Изменить</b-button
+      >
     </b-alert>
   </b-form-group>
 </template>

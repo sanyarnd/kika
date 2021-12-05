@@ -1,7 +1,6 @@
 import { Actions, Getters, Module, Mutations } from "vuex-smart-module";
 import { api } from "@/backend";
-import {Account, Group, List, Task, TaskInfo} from "@/models";
-import group from "@/pages/app/views/_Group.vue";
+import { Account, Group, List, Task } from "@/models";
 
 class AppState {
   account: Account = { id: 0, name: "Unknown" };

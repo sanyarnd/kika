@@ -1,4 +1,4 @@
-import {GetGroupMemberResponse, GroupRole} from "@/backend/dto";
+import { GetGroupMemberResponse, GroupRole } from "@/backend/dto";
 
 export interface NavbarItem {
   id: number;
@@ -56,6 +56,19 @@ export interface GroupEditInfo {
   name: string;
   members: GetGroupMemberResponse[];
   messageCount: number;
+}
+
+export interface GroupEditInfoLists {
+  id: number;
+  name: string;
+  lists: ConciseList[];
+  members: AccessData;
+}
+
+export interface ConciseList {
+  id: number;
+  name: string;
+  children: ConciseList[];
 }
 
 export interface MessageBulk {
@@ -173,7 +186,7 @@ export interface FrozenElem {
 
 export interface ElemInfo {
   id: number | null;
-  object: null | ListEditInfo | TaskEditInfo | GroupEditInfo;
+  object: null | ListEditInfo | TaskEditInfo | GroupEditInfo | GroupEditInfoLists;
   type: ParentInfoType | null;
 }
 

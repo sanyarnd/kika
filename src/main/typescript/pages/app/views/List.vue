@@ -16,11 +16,11 @@
 
           <b-list-group flush>
             <b-list-group-item
-                v-for="(child, key) in list.children"
-                :key="key"
-                :class="{ 'border-top': key === 0 }"
-                :to="{ name: 'list', params: { id: child.id } }"
-                class="border-bottom border-right border-left text-truncate"
+              v-for="(child, key) in list.children"
+              :key="key"
+              :class="{ 'border-top': key === 0 }"
+              :to="{ name: 'list', params: { id: child.id } }"
+              class="border-bottom border-right border-left text-truncate"
             >
               <font-awesome-icon :icon="['fas', 'list-ul']" class="kika-icon mr-2" />
               {{ child.name }}
@@ -28,17 +28,17 @@
           </b-list-group>
 
           <b-button
-              :to="{
+            :to="{
               name: 'list-new',
               params: {
                 groupId: list.group.id,
                 parentListId: list.id
               }
             }"
-              variant="outline-dark mt-1"
-              block
-              squared
-              size="sm"
+            variant="outline-dark mt-1"
+            block
+            squared
+            size="sm"
           >
             <font-awesome-icon class="kika-icon mr-1" :icon="['fas', 'plus']" />
             Новый список
@@ -46,11 +46,11 @@
 
           <b-list-group flush>
             <b-list-group-item
-                v-for="(task, key) in list.tasks"
-                :key="key"
-                :style="{ 'text-decoration': task.status === 'COMPLETED' ? 'line-through' : 'none' }"
-                :to="{ name: 'task', params: { id: task.id } }"
-                class="text-truncate border-0"
+              v-for="(task, key) in list.tasks"
+              :key="key"
+              :style="{ 'text-decoration': task.status === 'COMPLETED' ? 'line-through' : 'none' }"
+              :to="{ name: 'task', params: { id: task.id } }"
+              class="text-truncate border-0"
             >
               <font-awesome-icon :icon="['fas', 'circle']" class="kika-icon mr-1" />
               {{ task.name }}
@@ -58,11 +58,11 @@
           </b-list-group>
 
           <b-button
-              :to="{ name: 'task-new', params: {groupId: list.group.id, parentListId: list.id} }"
-              variant="outline-dark mt-1"
-              block
-              squared
-              size="sm"
+            :to="{ name: 'task-new', params: { groupId: list.group.id, parentListId: list.id } }"
+            variant="outline-dark mt-1"
+            block
+            squared
+            size="sm"
           >
             <font-awesome-icon class="kika-icon mr-1" :icon="['fas', 'plus']" />
             Новая задача
@@ -79,9 +79,8 @@ import { Component, Prop } from "vue-property-decorator";
 import BreadcrumbNavbarComponent from "@/components/BreadcrumbNavbarComponent.vue";
 import ListChildrenView from "@/components/ListChildrenView.vue";
 import ListTasksView from "@/components/ListTasksView.vue";
-import {Group, List, ListInfo, NavbarItem} from "@/models";
-import { appModule } from "@/store/app-module";
-import {api} from "@/backend";
+import { ListInfo, NavbarItem } from "@/models";
+import { api } from "@/backend";
 
 @Component({ components: { BreadcrumbNavbarComponent, ListChildrenView, ListTasksView } })
 export default class extends Vue {

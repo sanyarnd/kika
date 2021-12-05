@@ -33,7 +33,7 @@ public class TestUtils {
     public String createGroup(String ownerId, JwtToken ownerToken) throws Exception {
         return mockMvc.perform(post("/api/group/create")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(writeJson(Map.of("value", "group")))
+                .content(writeJson(Map.of("name", "group")))
                 .header(SecurityConfiguration.ACCESS_TOKEN_HEADER_NAME, ownerToken.accessToken()))
             .andReturn().getResponse().getContentAsString();
     }

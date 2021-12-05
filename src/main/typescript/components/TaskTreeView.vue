@@ -53,7 +53,10 @@ export default class extends Vue {
   }
 
   private toggleRotation(id: number): void {
-    document.getElementById("chevron-" + id)!.classList.toggle("down");
+    const chevron = document.getElementById("chevron-" + id);
+    if (chevron != null) {
+      chevron.classList.toggle("down");
+    }
   }
 }
 

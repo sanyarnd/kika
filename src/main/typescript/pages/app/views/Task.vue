@@ -56,20 +56,16 @@
             <b-col class="text-right text-right">
               <span id="complete-button">
                 <b-link
-                  :disabled="task.children.length > 0 && task.children.some((child) => child.status !== 'COMPLETED')"
+                  :disabled="task.children.length > 0 && task.children.some(child => child.status !== 'COMPLETED')"
                   style="white-space: nowrap"
                   class="text-secondary"
                   @click="toggleStatus()"
                 >
-                  <font-awesome-icon
-                    v-if="task.status === 'NOT_COMPLETED'"
-                    :icon="['far', 'square']"
-                    size="3x"
-                  />
+                  <font-awesome-icon v-if="task.status === 'NOT_COMPLETED'" :icon="['far', 'square']" size="3x" />
                   <font-awesome-icon v-else :icon="['far', 'check-square']" size="3x" />
                 </b-link>
                 <b-tooltip
-                  v-if="task.children.length > 0 && task.children.some((child) => child.status !== 'COMPLETED')"
+                  v-if="task.children.length > 0 && task.children.some(child => child.status !== 'COMPLETED')"
                   target="complete-button"
                   placement="topleft"
                   class="h4"
@@ -107,12 +103,12 @@ import { Component, Prop } from "vue-property-decorator";
 import BreadcrumbNavbarComponent from "@/components/BreadcrumbNavbarComponent.vue";
 import TaskTreeView from "@/components/TaskTreeView.vue";
 import ListTasksView from "@/components/ListTasksView.vue";
-import { Account, NavbarItem, TaskInfo } from "@/models";
+import { NavbarItem, TaskInfo } from "@/models";
 import { appModule } from "@/store/app-module";
 import { api } from "@/backend";
 
 @Component({
-  components: { TaskTreeView, BreadcrumbNavbarComponent, ListTasksView },
+  components: { TaskTreeView, BreadcrumbNavbarComponent, ListTasksView }
 })
 export default class extends Vue {
   private loaded: boolean = false;

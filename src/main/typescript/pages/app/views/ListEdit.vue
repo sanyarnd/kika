@@ -129,10 +129,10 @@ export default class extends Vue {
     await api.editList({
       id: this.id,
       name: this.listName,
-      parentId: this.parent?.type == "GROUP" ? null : this.parent?.object?.id!,
+      parentId: this.parent.type == "GROUP" || this.parent.object == null ? null : this.parent.object.id,
       accessList: this.specialAccess.set
-        ? this.specialAccess.accounts.filter((acc) => acc.hasAccess).map((acc) => acc.id)
-        : [],
+        ? this.specialAccess.accounts.filter(acc => acc.hasAccess).map(acc => acc.id)
+        : []
     });
     // await this.appStore.actions.fetchAll();
     // this.list = this.appStore.getters.list(+this.id)!;
@@ -145,7 +145,7 @@ export default class extends Vue {
         ? { id: this.list.parent.id, name: "list" }
         : {
             id: this.list.group.id,
-            name: "group",
+            name: "group"
           };
     await api.deleteList(this.id);
     await this.$router.push({ name: fallback.name, params: { id: `${fallback.id}` } });
@@ -153,11 +153,11 @@ export default class extends Vue {
 
   private restoreParent() {
     if (this.list.parent != null) {
-      this.parent!.type = "LIST";
-      this.parent!.object = this.list.parent;
+      this.parent.type = "LIST";
+      this.parent.object = this.list.parent;
     } else {
-      this.parent!.type = "GROUP";
-      this.parent!.object = this.list.group;
+      this.parent.type = "GROUP";
+      this.parent.object = this.list.group;
     }
 
     this.useNewAccessList = false;
@@ -168,27 +168,30 @@ export default class extends Vue {
   private async parentChanged(value: MoveElemInfo): Promise<void> {
     if (
       (this.list.parent == null && value.type == "GROUP") ||
-      (this.list.parent?.id == value.object?.id && value.type == "LIST")
+      (this.list.parent != null && this.list.parent.id == value.object!.id && value.type == "LIST")
     ) {
       this.useNewAccessList = false;
     } else {
       if (value.type == "GROUP") {
-        const resp = await api.getGroupMembers(value?.object?.id!);
+        const resp = await api.getGroupMembers(value.object!.id);
         if (resp == null) {
           return;
         }
         this.specialAccessNew = {
           set: false,
-          accounts: resp.members.map((m) => {
+          accounts: resp.members.map(m => {
             return { id: m.id, name: m.name, hasAccess: true };
-          }),
+          })
         };
       } else {
-        const resp = await api.getListAccessData(value?.object?.id!);
+        const resp = await api.getListAccessData(value.object!.id);
         if (resp == null) {
           return;
         }
         this.specialAccessNew = resp;
+        const parentAccessIds = this.specialAccessNew.accounts.filter(acc => acc.hasAccess).map(acc => acc.id);
+        this.specialAccessNew.accounts = this.specialAccessNew.accounts
+            .filter(acc => parentAccessIds.includes(acc.id));
       }
       this.useNewAccessList = true;
     }

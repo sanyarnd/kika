@@ -21,7 +21,7 @@
         </b-row>
       </b-list-group-item>
       <b-collapse :id="getTaskChildrenCollapseId(item.id)" class="ml-3">
-        <set-task-parent-view :frozen-elem="frozenElem" :items="item.children" v-model="moveTo" :task="task" />
+        <set-task-parent-view v-model="moveTo" :frozen-elem="frozenElem" :items="item.children" :task="task" />
       </b-collapse>
     </b-list-group>
   </span>
@@ -31,7 +31,7 @@
 import Vue from "vue";
 import { Component, Prop, VModel } from "vue-property-decorator";
 import SetTaskParentView from "@/components/SetTaskParentView.vue";
-import {ElemInfo, FrozenElem, MoveElemInfo, SubTaskWithChildren, Task, TaskEditInfo} from "@/models";
+import { ElemInfo, FrozenElem, MoveElemInfo, SubTaskWithChildren, Task } from "@/models";
 
 @Component({ name: "SetTaskParentView", components: { SetTaskParentView } })
 export default class extends Vue {

@@ -10,7 +10,13 @@
           <hr />
           <b-card-text>
             <b-form-group label="Сообщений на странице группы:" label-for="input-default">
-              <b-form-spinbutton step="5" min="5" max="30" @change="dirtyState=true" v-model="msgPerPage"></b-form-spinbutton>
+              <b-form-spinbutton
+                v-model="msgPerPage"
+                step="5"
+                min="5"
+                max="30"
+                @change="dirtyState = true"
+              ></b-form-spinbutton>
             </b-form-group>
           </b-card-text>
 
@@ -37,8 +43,7 @@ import BreadcrumbNavbarComponent from "@/components/BreadcrumbNavbarComponent.vu
 import MoveObjectComponent from "@/components/MoveObjectComponent.vue";
 import ListAccessComponent from "@/components/ListAccessComponent.vue";
 import { appModule } from "@/store/app-module";
-import { api } from "@/backend";
-import {router} from "@/pages/app/router";
+import { router } from "@/pages/app/router";
 
 @Component({ components: { BreadcrumbNavbarComponent, MoveObjectComponent, ListAccessComponent } })
 export default class extends Vue {

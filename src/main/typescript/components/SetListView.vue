@@ -1,8 +1,8 @@
 <template>
   <span>
     <b-list-group-item
-        class="border-left-0 border-right-0 border-top-0"
       v-if="object.type === 'LIST'"
+      class="border-left-0 border-right-0 border-top-0"
       :active="highlight('GROUP', group.id)"
       :variant="freeze('GROUP', group.id) ? 'dark' : 'outline-primary'"
       href="#"
@@ -63,7 +63,7 @@ import Vue from "vue";
 import { Component, Prop, VModel } from "vue-property-decorator";
 import SetListView from "@/components/SetListView.vue";
 import SetTaskParentView from "@/components/SetTaskParentView.vue";
-import {ElemInfo, FrozenElem, GroupTree, MoveElemInfo, ParentInfoType, SubTaskListWithChildren, Task} from "@/models";
+import { ElemInfo, FrozenElem, GroupTree, MoveElemInfo, ParentInfoType, SubTaskListWithChildren, Task } from "@/models";
 
 @Component({ name: "SetListView", components: { SetListView, SetTaskParentView } })
 export default class extends Vue {
@@ -108,8 +108,6 @@ export default class extends Vue {
   private toggleSelection(type: ParentInfoType, object: SubTaskListWithChildren | GroupTree): void {
     this.toggleRotation(object.id);
     if (object.id == this.frozenElem.id && type == this.frozenElem.type) {
-      return;
-    } else if (type == this.frozenElem.type && object.id == this.frozenElem.id) {
       return;
     }
     this.moveTo = { object: object, type: type };

@@ -30,29 +30,24 @@
                   </b-form-group>
                 </validation-provider>
 
-<!--                <validation-provider v-slot="{ errors, valid }" name="Группа" rules="excluded:-1">-->
-<!--                  <b-form-group>-->
-<!--                    <div class="mb-2">Группа: <span class="text-danger">*</span></div>-->
-<!--                    <b-form-select id="group" v-model="groupId_" :options="groupsToChooseFrom" @change="clearParent" />-->
-<!--                  </b-form-group>-->
-<!--                  <b-form-invalid-feedback :state="valid">-->
-<!--                    <span v-for="(error, index) in errors" :key="index">{{ error }}</span>-->
-<!--                  </b-form-invalid-feedback>-->
-<!--                </validation-provider>-->
+                <!--                <validation-provider v-slot="{ errors, valid }" name="Группа" rules="excluded:-1">-->
+                <!--                  <b-form-group>-->
+                <!--                    <div class="mb-2">Группа: <span class="text-danger">*</span></div>-->
+                <!--                    <b-form-select id="group" v-model="groupId_" :options="groupsToChooseFrom" @change="clearParent" />-->
+                <!--                  </b-form-group>-->
+                <!--                  <b-form-invalid-feedback :state="valid">-->
+                <!--                    <span v-for="(error, index) in errors" :key="index">{{ error }}</span>-->
+                <!--                  </b-form-invalid-feedback>-->
+                <!--                </validation-provider>-->
 
-                <validation-provider v-if="groupId_ !== '-1'" name="Родительский компонент">
-                  <div class="mb-2">Родительский компонент: <span class="text-danger">*</span></div>
-                  <pick-parent-component
-                    v-model="parent"
-                    :object-type="'TASK'"
-                    :group="group"
-                    :lists="group.lists"
-                    @validation:warning="parentStateIsValid = false"
-                  />
-                  <b-form-invalid-feedback class="mb-3" :state="parent != null || parentStateIsValid">
-                    Необходимо указать родительский компонент
-                  </b-form-invalid-feedback>
-                </validation-provider>
+                <!--                <validation-provider v-if="groupId_ !== '-1'" name="Родительский компонент">-->
+                <pick-parent-component v-model="parent" :object-type="'TASK'" :group="group" :lists="group.lists" />
+                <!--                    @validation:warning="parentStateIsValid = false"-->
+                <!--                  />-->
+                <!--                  <b-form-invalid-feedback class="mb-3" :state="parent != null || parentStateIsValid">-->
+                <!--                    Необходимо указать родительский компонент-->
+                <!--                  </b-form-invalid-feedback>-->
+                <!--                </validation-provider>-->
 
                 <b-row>
                   <b-col>
@@ -75,10 +70,10 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Component, Prop, Watch } from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import BreadcrumbNavbarComponent from "@/components/BreadcrumbNavbarComponent.vue";
 import PickParentComponent from "@/components/PickParentComponent.vue";
-import {ElemInfo, Group, GroupEditInfo, NavbarItem} from "@/models";
+import { ElemInfo, GroupEditInfoLists, NavbarItem } from "@/models";
 import { api } from "@/backend";
 import { appModule } from "@/store/app-module";
 // import {settingsModule} from "@/store/settings-module";
@@ -105,40 +100,41 @@ export default class extends Vue {
   private groupId_: string = "-1";
   private parent: ElemInfo | null = null;
 
-  private group: GroupEditInfo | null = null;
-  private groupsToChooseFrom = [{ value: "-1", text: "-- Выбрать группу --", disabled: true }];
+  private group!: GroupEditInfoLists;
+  // private groupsToChooseFrom = [{ value: "-1", text: "-- Выбрать группу --", disabled: true }];
 
   private loaded: boolean = false;
   private parentStateIsValid: boolean = true;
 
-  @Watch("groupId_")
-  private async refreshGroupAndListsAndTasks(groupId: number | string): Promise<void> {
-    this.group = this.appStore.getters.group(groupId)!;
-    for (let list of this.group?.lists) {
-      await this.appStore.actions.fetchListTasks(list.id);
-    }
-    if (this.groupId_ != null) {
-      if (this.navbarItems.length == 0) {
-        this.navbarItems.push({ id: this.group.id, name: this.group.name, type: "GROUP" });
-      } else {
-        this.navbarItems[0].id = this.group.id;
-        this.navbarItems[0].name = this.group.name;
-      }
-    }
-  }
+  // @Watch("groupId_")
+  // private async refreshGroupAndListsAndTasks(groupId: number | string): Promise<void> {
+  //   // this.group = this.appStore.getters.group(groupId)!;
+  //   for (let list of this.group!.lists) {
+  //     await this.appStore.actions.fetchListTasks(list.id);
+  //   }
+  //   if (this.groupId_ != null) {
+  //     if (this.navbarItems.length == 0) {
+  //       this.navbarItems.push({ id: this.group.id, name: this.group.name, type: "GROUP" });
+  //     } else {
+  //       this.navbarItems[0].id = this.group.id;
+  //       this.navbarItems[0].name = this.group.name;
+  //     }
+  //   }
+  // }
 
   async created() {
-    if(this.groupId == null) {
+    if (this.groupId == null) {
       await this.$router.push({ name: "index" });
       return;
     }
 
-    const group = await api.getGroupEditInfo(this.groupId);
-    if(group != null) {
-      this.parent = {id: parseInt(this.groupId), object: this.group, type: "GROUP"};
+    const group = await api.getGroupEditInfoLists(this.groupId);
+    if (group != null) {
+      this.group = group;
+      this.parent = { id: parseInt(this.groupId), object: this.group, type: "GROUP" };
       this.navbarItems.push({ id: group.id, name: group.name, type: "GROUP" });
       this.groupId_ = this.groupId;
-      await this.refreshGroupAndListsAndTasks(this.groupId);
+      // await this.refreshGroupAndListsAndTasks(this.groupId);
     } else {
       await this.$router.push({ name: "index" });
       return;
@@ -148,9 +144,9 @@ export default class extends Vue {
       const parentList = await api.getListEditInfo(this.parentListId);
       if (parentList != null) {
         this.parent = { id: parentList.id, object: parentList, type: "LIST" };
-        console.log(this.navbarItems)
-        this.navbarItems.push({id: +parentList.id, name: parentList.name, type: "LIST"});
-        console.log(this.navbarItems)
+        console.log(this.navbarItems);
+        this.navbarItems.push({ id: +parentList.id, name: parentList.name, type: "LIST" });
+        console.log(this.navbarItems);
       } else {
         console.log("Invalid parent list");
         await this.$router.push({ name: "index" });
@@ -158,9 +154,9 @@ export default class extends Vue {
       }
     }
 
-    for (let userGroup of this.appStore.getters.groups) {
-      this.groupsToChooseFrom.push({ value: `${userGroup.id}`, text: userGroup.name, disabled: false });
-    }
+    // for (let userGroup of this.appStore.getters.groups) {
+    //   this.groupsToChooseFrom.push({ value: `${userGroup.id}`, text: userGroup.name, disabled: false });
+    // }
 
     this.loaded = true;
   }
@@ -199,13 +195,13 @@ export default class extends Vue {
         return;
       }
     } else {
-      listId = this.parent?.id!;
+      listId = this.parent!.id!;
     }
 
     const newTaskId = await api.createTask({
       name: this.name,
       description: this.description,
-      parentId: this.parent?.type == "TASK" ? this.parent!.object!.id : null,
+      parentId: this.parent == null || this.parent.type != "TASK" ? null : this.parent.object!.id,
       listId: listId
     });
     console.log(newTaskId);

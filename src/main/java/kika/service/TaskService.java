@@ -63,6 +63,13 @@ public class TaskService {
         }
     }
 
+    private void checkTaskAndParentTaskLists(@NotNull Task task, @NotNull Task parent) {
+        if (parent.getList().safeId() != task.getList().safeId()) {
+            throw new IllegalArgumentException(String.format("Task (id=%d) and task (id=%d) are in different lists",
+                task.safeId(), parent.safeId()));
+        }
+    }
+
     private void checkGroupMemberPermission(KikaPrincipal principal, Group group) {
         if (group.getMembers().stream()
             .noneMatch(member -> member.getAccount().safeId() == principal.accountId()
@@ -155,6 +162,8 @@ public class TaskService {
                 Task parent = taskRepository.getById(parentId);
                 if (listId != null) {
                     checkTaskListAndParent(listId, parent);
+                } else {
+                    checkTaskAndParentTaskLists(task, parent);
                 }
                 task.setParent(parent);
                 if (parent.getList().safeId() != task.getList().safeId()) {

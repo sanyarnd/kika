@@ -10,6 +10,7 @@ import kika.controller.request.LoadMessagesRequest;
 import kika.controller.request.SetMemberRoleRequest;
 import kika.controller.request.SingleNonNullableNumericPropertyRequest;
 import kika.controller.request.SingleNonNullablePropertyRequest;
+import kika.controller.response.GetGroupEditInfoListsResponse;
 import kika.controller.response.GetGroupEditInfoResponse;
 import kika.controller.response.GetGroupInfoResponse;
 import kika.controller.response.GetGroupMessageResponse;
@@ -61,6 +62,11 @@ public class GroupController {
     @GetMapping("/group/{id}/info/edit")
     public GetGroupEditInfoResponse getGroupEditInfo(@PathVariable long id, @AuthenticationPrincipal KikaPrincipal principal) {
         return groupService.getEditInfo(id, principal);
+    }
+
+    @GetMapping("/group/{id}/info/lists")
+    public GetGroupEditInfoListsResponse getGroupEditInfoLists(@PathVariable long id, @AuthenticationPrincipal KikaPrincipal principal) {
+        return groupService.getEditInfoLists(id, principal);
     }
 
     @GetMapping("/group/{groupId}/tree/list/{listId}")

@@ -1,6 +1,6 @@
 <template>
-  <b-alert show>
-    <b-button v-b-modal:pick-destination block variant="info">Переместить в...</b-button>
+  <b-alert show class="bg-transparent" variant="secondary">
+    <b-button size="sm" v-b-modal:pick-destination block variant="info">Переместить в...</b-button>
     <b-modal
       id="pick-destination"
       :title="`Перемещение ${object.type === 'TASK' ? 'задачи' : 'списка'}`"
@@ -25,7 +25,7 @@
         <b-button @click="$bvModal.hide('pick-destination')">Отмена</b-button>
       </template>
     </b-modal>
-    <b-table-simple v-if="submitted" borderless class="m-0">
+    <b-table-simple v-if="submitted" borderless class="m-0 mb-n2">
       <col width="100%" />
       <col width="0%" />
       <b-tr class="h5">
@@ -59,7 +59,7 @@ import Vue from "vue";
 import { Component, Prop, VModel } from "vue-property-decorator";
 import BreadcrumbNavbarComponent from "@/components/BreadcrumbNavbarComponent.vue";
 import SetListView from "@/components/SetListView.vue";
-import {ElemInfo, FrozenElem, Group, GroupTree, List, MoveElemInfo, SubTaskListWithChildren, Task} from "@/models";
+import { ElemInfo, FrozenElem, GroupTree, MoveElemInfo, SubTaskListWithChildren } from "@/models";
 
 @Component({
   components: { SetListView, BreadcrumbNavbarComponent }

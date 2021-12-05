@@ -3,8 +3,8 @@
     <div class="mb-2">Участники:</div>
     <b-input-group v-if="newMemberToAdd.id === -1">
       <b-form-input
-        :state="memberPickerState"
         v-model="newMemberId"
+        :state="memberPickerState"
         placeholder="Добавить участника"
         @keydown.enter="getAccount"
       />
@@ -27,7 +27,7 @@
         <col width="100%" />
         <col width="0%" />
       </colgroup>
-      <b-tr v-for="member in members" :key="member.id" :id="'member-' + member.id">
+      <b-tr v-for="member in members" :id="'member-' + member.id" :key="member.id">
         <b-td
           class="pt-0 pl-1 pb-0 pr-1"
           style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 1px; vertical-align: middle"
@@ -81,7 +81,7 @@
               >
             </b-dropdown>
             <b-button
-                squared
+              squared
               class="pl-3 pr-3"
               size="sm"
               variant="outline-danger"
@@ -120,7 +120,7 @@ export default class extends Vue {
     if (!this.memberPickerState) {
       return;
     }
-    if (this.newMemberId !== "" && !this.members.map((m) => `${m.id}`).includes(this.newMemberId)) {
+    if (this.newMemberId !== "" && !this.members.map(m => `${m.id}`).includes(this.newMemberId)) {
       const newMember = await api.getAccountById(this.newMemberId);
       if (newMember != null) {
         this.newMemberToAdd = { id: newMember.id, name: newMember.name, role: "MEMBER" };
@@ -138,7 +138,7 @@ export default class extends Vue {
   }
 
   private removeMember(id: number): void {
-    const toRemove = this.members.find((m) => m.id === id);
+    const toRemove = this.members.find(m => m.id === id);
     if (toRemove != undefined) {
       this.members.splice(this.members.indexOf(toRemove), 1);
     }
