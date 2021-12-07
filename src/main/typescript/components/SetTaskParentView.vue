@@ -31,7 +31,7 @@
 import Vue from "vue";
 import { Component, Prop, VModel } from "vue-property-decorator";
 import SetTaskParentView from "@/components/SetTaskParentView.vue";
-import { ElemInfo, FrozenElem, MoveElemInfo, SubTaskWithChildren, Task } from "@/models";
+import { ConciseTask, ElemInfo, FrozenElem, MoveElemInfo } from "@/models";
 
 @Component({ name: "SetTaskParentView", components: { SetTaskParentView } })
 export default class extends Vue {
@@ -39,7 +39,7 @@ export default class extends Vue {
   private readonly task!: ElemInfo;
 
   @Prop({ default: [] })
-  private readonly items!: SubTaskWithChildren[];
+  private readonly items!: ConciseTask[];
 
   @VModel()
   private moveTo!: MoveElemInfo;
@@ -58,7 +58,7 @@ export default class extends Vue {
     return `task-chevron-${id}`;
   }
 
-  private toggleSelection(object: Task): void {
+  private toggleSelection(object: ConciseTask): void {
     if (object.id == this.frozenElem.id) {
       return;
     }

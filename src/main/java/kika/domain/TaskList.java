@@ -1,5 +1,6 @@
 package kika.domain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @Getter
 @Entity
 @Table(name = "task_list")
+@SuppressFBWarnings("FCCD_FIND_CLASS_CIRCULAR_DEPENDENCY")
 public class TaskList extends AutoPersistableAuditable {
     @Column(name = "name")
     private String name;

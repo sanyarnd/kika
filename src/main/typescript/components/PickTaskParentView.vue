@@ -23,12 +23,12 @@
 import Vue from "vue";
 import { Component, Prop, VModel } from "vue-property-decorator";
 import PickTaskParentView from "@/components/PickTaskParentView.vue";
-import { ElemInfo, List, ParentInfoType, Task } from "@/models";
+import { ConciseTask, ElemInfo, ParentInfoType } from "@/models";
 
 @Component({ name: "PickTaskParentView", components: { PickTaskParentView } })
 export default class extends Vue {
   @Prop({ default: [] })
-  private readonly items!: Task[];
+  private readonly items!: ConciseTask[];
 
   @VModel()
   private model!: ElemInfo;
@@ -48,9 +48,9 @@ export default class extends Vue {
     return `task-${id}-children`;
   }
 
-  private toggleSelection(type: ParentInfoType, object: Task): void {
+  private toggleSelection(type: ParentInfoType, object: ConciseTask): void {
     this.toggleRotation(object.id);
-    this.model = { id: object.id, object, type: type };
+    this.model = { id: object.id, object: object, type: type };
   }
 
   private taskElementId(id: number): string {
@@ -60,10 +60,5 @@ export default class extends Vue {
   private highlight(type: ParentInfoType, id: number): boolean {
     return this.model.type == type && this.model.id == id;
   }
-}
-
-export interface ObjectToMove {
-  object: Task | List;
-  type: "TASK" | "LIST";
 }
 </script>

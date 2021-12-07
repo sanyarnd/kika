@@ -58,7 +58,7 @@ export interface GroupEditInfo {
   messageCount: number;
 }
 
-export interface GroupEditInfoLists {
+export interface ConciseGroup {
   id: number;
   name: string;
   lists: ConciseList[];
@@ -69,6 +69,13 @@ export interface ConciseList {
   id: number;
   name: string;
   children: ConciseList[];
+  tasks: ConciseTask[];
+}
+
+export interface ConciseTask {
+  id: number;
+  name: string;
+  children: ConciseTask[];
 }
 
 export interface MessageBulk {
@@ -186,7 +193,7 @@ export interface FrozenElem {
 
 export interface ElemInfo {
   id: number | null;
-  object: null | ListEditInfo | TaskEditInfo | GroupEditInfo | GroupEditInfoLists;
+  object: null | ConciseGroup | ConciseList | ConciseTask;
   type: ParentInfoType | null;
 }
 

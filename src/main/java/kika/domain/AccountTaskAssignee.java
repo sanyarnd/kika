@@ -1,5 +1,6 @@
 package kika.domain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.persistence.Column;
@@ -20,6 +21,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "account_task_assignee")
 @NoArgsConstructor
+@SuppressFBWarnings("FCCD_FIND_CLASS_CIRCULAR_DEPENDENCY")
 public class AccountTaskAssignee implements Serializable {
     @EmbeddedId
     private PK id;

@@ -56,16 +56,23 @@ public class GroupController {
     @GetMapping("/group/{id}")
     public GetGroupResponse getGroup(@PathVariable long id, @AuthenticationPrincipal KikaPrincipal principal) {
         GroupDto group = groupService.get(id, principal);
-        return new GetGroupResponse(group.id(), group.name(), group.ownerId(), group.ownerName(), group.role(), group.messageCount());
+        return new GetGroupResponse(group.id(), group.name(), group.ownerId(), group.ownerName(), group.role(),
+            group.messageCount());
     }
 
     @GetMapping("/group/{id}/info/edit")
-    public GetGroupEditInfoResponse getGroupEditInfo(@PathVariable long id, @AuthenticationPrincipal KikaPrincipal principal) {
+    public GetGroupEditInfoResponse getGroupEditInfo(
+        @PathVariable long id,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
         return groupService.getEditInfo(id, principal);
     }
 
     @GetMapping("/group/{id}/info/lists")
-    public GetGroupEditInfoListsResponse getGroupEditInfoLists(@PathVariable long id, @AuthenticationPrincipal KikaPrincipal principal) {
+    public GetGroupEditInfoListsResponse getGroupEditInfoLists(
+        @PathVariable long id,
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
         return groupService.getEditInfoLists(id, principal);
     }
 
@@ -179,9 +186,11 @@ public class GroupController {
     }
 
     @PostMapping("/group/{id}/info")
-    public GetGroupInfoResponse getGroupInfo(@PathVariable long id,
+    public GetGroupInfoResponse getGroupInfo(
+        @PathVariable long id,
         @RequestBody LoadMessagesRequest request,
-        @AuthenticationPrincipal KikaPrincipal principal) {
+        @AuthenticationPrincipal KikaPrincipal principal
+    ) {
         return groupService.getInfo(id, request.offset(), request.count(), principal);
     }
 

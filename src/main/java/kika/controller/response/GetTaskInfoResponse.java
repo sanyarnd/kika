@@ -1,11 +1,11 @@
 package kika.controller.response;
 
+import java.util.List;
 import kika.domain.AccountRole;
 import kika.domain.Task;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import java.util.List;
 
 @Getter
 @NoArgsConstructor

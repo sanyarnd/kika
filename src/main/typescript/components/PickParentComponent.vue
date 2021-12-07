@@ -43,8 +43,8 @@
       <!--        </b-tr>-->
       <!--      </b-table-simple>-->
       <b-button v-b-modal:pick-parent size="sm" block data-vv-name="pick-parent" variant="info" class="mt-2"
-        >Изменить</b-button
-      >
+        >Изменить
+      </b-button>
     </b-alert>
   </b-form-group>
 </template>
@@ -55,7 +55,7 @@ import { Component, Prop, VModel } from "vue-property-decorator";
 import BreadcrumbNavbarComponent from "@/components/BreadcrumbNavbarComponent.vue";
 import PickListParentView from "@/components/PickListParentView.vue";
 import SetListView from "@/components/SetListView.vue";
-import { ElemInfo, Group, List } from "@/models";
+import { ConciseList, ElemInfo, ConciseGroup } from "@/models";
 
 @Component({
   components: { PickListParentView, SetListView, BreadcrumbNavbarComponent }
@@ -65,16 +65,16 @@ export default class extends Vue {
   private readonly objectType!: "LIST" | "TASK";
 
   @Prop()
-  private readonly lists!: List[];
+  private readonly lists!: ConciseList[];
 
   @Prop()
-  private readonly group!: Group;
+  private readonly group!: ConciseGroup;
 
   @VModel()
   private finalModel!: ElemInfo | null;
   private pickModel: ElemInfo = {
     id: 0,
-    object: { id: -1, name: "", children: [], tasks: [], groupId: 0, parentId: 0 },
+    object: { id: -1, name: "", children: [], tasks: [] },
     type: "LIST"
   };
 
@@ -86,10 +86,10 @@ export default class extends Vue {
     }
   }
 
-  private clearParentData(): void {
-    this.finalModel = null;
-    this.$emit("validation:warning", true);
-  }
+  // private clearParentData(): void {
+  //   this.finalModel = null;
+  //   this.$emit("validation:warning", true);
+  // }
 
   private submit(): void {
     this.finalModel = { id: this.pickModel.id, object: this.pickModel.object, type: this.pickModel.type };

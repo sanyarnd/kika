@@ -74,7 +74,7 @@ import PickParentComponent from "@/components/PickParentComponent.vue";
 import { appModule } from "@/store/app-module";
 import { api } from "@/backend";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
-import { AccessData, Account, ElemInfo, GroupEditInfoLists, NavbarItem } from "@/models";
+import { AccessData, Account, ElemInfo, ConciseGroup, NavbarItem } from "@/models";
 
 @Component({
   components: {
@@ -98,7 +98,7 @@ export default class extends Vue {
   private readonly navbarItems: NavbarItem[] = [];
 
   private readonly appStore = appModule.context(this.$store);
-  private group!: GroupEditInfoLists;
+  private group!: ConciseGroup;
 
   private name: string = "";
   private groupId_: string = "-1";
@@ -162,7 +162,11 @@ export default class extends Vue {
     if (this.parentListId != null) {
       const parentList = await api.getListCreateInfo(this.parentListId);
       if (parentList != null) {
-        this.parent = { id: parentList.id, object: parentList, type: "LIST" };
+        this.parent = {
+          id: parentList.id,
+          object: { id: parentList.id, name: parentList.name, children: [], tasks: [] },
+          type: "LIST"
+        };
         this.navbarItems.push({ id: +parentList.id, name: parentList.name, type: "LIST" });
         this.specialAccess = parentList.accessData;
         this.specialAccess.accounts;

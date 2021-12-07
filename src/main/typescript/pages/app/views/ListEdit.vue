@@ -190,8 +190,7 @@ export default class extends Vue {
         }
         this.specialAccessNew = resp;
         const parentAccessIds = this.specialAccessNew.accounts.filter(acc => acc.hasAccess).map(acc => acc.id);
-        this.specialAccessNew.accounts = this.specialAccessNew.accounts
-            .filter(acc => parentAccessIds.includes(acc.id));
+        this.specialAccessNew.accounts = this.specialAccessNew.accounts.filter(acc => parentAccessIds.includes(acc.id));
       }
       this.useNewAccessList = true;
     }

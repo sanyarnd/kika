@@ -63,7 +63,7 @@ import Vue from "vue";
 import { Component, Prop, VModel } from "vue-property-decorator";
 import SetListView from "@/components/SetListView.vue";
 import SetTaskParentView from "@/components/SetTaskParentView.vue";
-import { ElemInfo, FrozenElem, GroupTree, MoveElemInfo, ParentInfoType, SubTaskListWithChildren, Task } from "@/models";
+import { ConciseList, ElemInfo, FrozenElem, ConciseGroup, MoveElemInfo, ParentInfoType } from "@/models";
 
 @Component({ name: "SetListView", components: { SetListView, SetTaskParentView } })
 export default class extends Vue {
@@ -71,10 +71,10 @@ export default class extends Vue {
   private readonly object!: ElemInfo;
 
   @Prop()
-  private readonly group!: GroupTree | null;
+  private readonly group!: ConciseGroup | null;
 
   @Prop({ default: [] })
-  private readonly items!: SubTaskListWithChildren[];
+  private readonly items!: ConciseList[];
 
   @VModel()
   private moveTo!: MoveElemInfo;
@@ -82,7 +82,7 @@ export default class extends Vue {
   @Prop()
   private readonly frozenElem!: FrozenElem;
 
-  private displayChevron(item: SubTaskListWithChildren): boolean {
+  private displayChevron(item: ConciseList): boolean {
     if (this.object.type === "LIST") {
       return item.tasks.length > 0 || item.children.map(list => list.id !== this.object.object?.id).length > 0;
     } else {
@@ -105,7 +105,7 @@ export default class extends Vue {
     return `list-${id}-children`;
   }
 
-  private toggleSelection(type: ParentInfoType, object: SubTaskListWithChildren | GroupTree): void {
+  private toggleSelection(type: ParentInfoType, object: ConciseList | ConciseGroup): void {
     this.toggleRotation(object.id);
     if (object.id == this.frozenElem.id && type == this.frozenElem.type) {
       return;
@@ -124,10 +124,5 @@ export default class extends Vue {
   private freeze(type: ParentInfoType, id: number): boolean {
     return this.frozenElem.type === type && this.frozenElem.id === id;
   }
-}
-
-export interface ObjectToMove {
-  object: Task | SubTaskListWithChildren;
-  type: "TASK" | "LIST";
 }
 </script>

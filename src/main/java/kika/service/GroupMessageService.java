@@ -51,7 +51,7 @@ public class GroupMessageService {
         return group.getMessages().stream()
             .map(message -> new GroupMessageDto(message.safeId(), message.getGroup().safeId(), message.getCreatedDate(),
                 message.getBody(), accountRepository.findById(Long.valueOf(message.getCreatedBy())).map(
-                Account::getName).orElse("(аккаунт удален)")))
+                Account::getName).orElse(Account.ACCOUNT_DELETED)))
             .collect(Collectors.toSet());
     }
 
@@ -60,7 +60,8 @@ public class GroupMessageService {
         GroupMessage message = groupMessageRepository.getById(id);
         checkMemberAccess(principal, message.getGroup());
         return new GroupMessageDto(message.safeId(), message.getGroup().safeId(), message.getCreatedDate(),
-            message.getBody(), accountRepository.findById(Long.parseLong(message.getCreatedBy())).map(Account::getName).orElse("(аккаунт удален)"));
+            message.getBody(), accountRepository.findById(Long.valueOf(message.getCreatedBy())).map(Account::getName)
+            .orElse(Account.ACCOUNT_DELETED));
     }
 
     @Transactional
@@ -84,7 +85,8 @@ public class GroupMessageService {
             .skip(offset)
             .limit(count)
             .map(message -> new MessageBulk.SubMessage(message.safeId(), message.getCreatedDate(), message.getBody(),
-                accountRepository.findById(Long.parseLong(message.getCreatedBy())).map(Account::getName).orElse("(аккаунт удален)")))
+                accountRepository.findById(Long.valueOf(message.getCreatedBy())).map(Account::getName)
+                    .orElse(Account.ACCOUNT_DELETED)))
             .toList(),
             group.getMessages().size(),
             offset);

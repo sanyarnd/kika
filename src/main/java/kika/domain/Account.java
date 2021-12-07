@@ -18,6 +18,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @Table(name = "account")
 public class Account extends AutoPersistableAuditable {
+    public final static String ACCOUNT_DELETED = "ACCOUNT_DELETED";
+
     @Column(name = "name")
     private String name;
 

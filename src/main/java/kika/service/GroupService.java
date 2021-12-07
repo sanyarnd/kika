@@ -295,8 +295,8 @@ public class GroupService {
         if (members != null) {
             Set<Long> ids = Arrays.stream(members).map(AddGroupMemberRequest::getId).collect(Collectors.toSet());
             group.getMembers().stream()
-                .filter(accountRole -> !ids.contains(accountRole.getId().getAccountId()) &&
-                    (accountRole.getId().getAccountId() != group.getOwner().safeId()))
+                .filter(accountRole -> !ids.contains(accountRole.getId().getAccountId())
+                    && (accountRole.getId().getAccountId() != group.getOwner().safeId()))
                 .forEach(group::removeMember);
             for (AddGroupMemberRequest member : members) {
                 addMember(groupId, member.getId(), member.getRole(), principal);
@@ -319,8 +319,8 @@ public class GroupService {
                 .limit(count)
                 .map(
                     message -> new MessageBulk.SubMessage(message.safeId(), message.getCreatedDate(), message.getBody(),
-                        accountRepository.findById(Long.parseLong(message.getCreatedBy())).map(Account::getName)
-                            .orElse("(аккаунт удален)")))
+                        accountRepository.findById(Long.valueOf(message.getCreatedBy())).map(Account::getName)
+                            .orElse(Account.ACCOUNT_DELETED)))
                 .toList(),
                 group.getMessages().size(),
                 0));
@@ -426,7 +426,7 @@ public class GroupService {
             new TaskListSpecialAccessResponse(false, group.getMembers().stream()
                 .map(accountRole -> new AccountWithAccess(accountRole.getId().getAccountId(),
                     accountRole.getAccount().getName(),
-                    Boolean.TRUE))
+                    true))
                 .toList()));
     }
 }

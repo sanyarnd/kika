@@ -1,6 +1,6 @@
 <template>
   <b-alert show class="bg-transparent" variant="secondary">
-    <b-button size="sm" v-b-modal:pick-destination block variant="info">Переместить в...</b-button>
+    <b-button v-b-modal:pick-destination size="sm" block variant="info">Переместить в...</b-button>
     <b-modal
       id="pick-destination"
       :title="`Перемещение ${object.type === 'TASK' ? 'задачи' : 'списка'}`"
@@ -59,7 +59,7 @@ import Vue from "vue";
 import { Component, Prop, VModel } from "vue-property-decorator";
 import BreadcrumbNavbarComponent from "@/components/BreadcrumbNavbarComponent.vue";
 import SetListView from "@/components/SetListView.vue";
-import { ElemInfo, FrozenElem, GroupTree, MoveElemInfo, SubTaskListWithChildren } from "@/models";
+import { ConciseList, ElemInfo, FrozenElem, ConciseGroup, MoveElemInfo } from "@/models";
 
 @Component({
   components: { SetListView, BreadcrumbNavbarComponent }
@@ -69,10 +69,10 @@ export default class extends Vue {
   private readonly object!: ElemInfo;
 
   @Prop()
-  private readonly list_tree!: SubTaskListWithChildren[];
+  private readonly list_tree!: ConciseList[];
 
   @Prop()
-  private readonly group!: GroupTree | null;
+  private readonly group!: ConciseGroup | null;
 
   @Prop()
   private readonly frozenElem!: FrozenElem;

@@ -155,7 +155,7 @@ public class TaskService {
                 task.moveChildrenIntoList(list);
             }
         }
-        if(!Objects.equals(parentId, task.getParentId())) {
+        if (!Objects.equals(parentId, task.getParentId())) {
             if (parentId == null) {
                 task.setParent(null);
             } else {
@@ -256,8 +256,8 @@ public class TaskService {
             task.getDescription(),
             task.isSubscribed(principal.accountId()),
             task.isAssigned(principal.accountId()),
-            task.getParent() != null ?
-                new GetTaskInfoResponse.ParentTask(task.getParent().safeId(), task.getParent().getName()) : null,
+            task.getParent() != null
+                ? new GetTaskInfoResponse.ParentTask(task.getParent().safeId(), task.getParent().getName()) : null,
             new GetTaskInfoResponse.SubTaskList(task.getList().safeId(), task.getList().getName()),
             new GetTaskInfoResponse.SubGroup(task.getList().getGroup().safeId(), task.getList().getGroup().getName(),
                 task.getList().getGroup().getRole(principal.accountId())),
@@ -272,8 +272,8 @@ public class TaskService {
         Task task = taskRepository.getById(id);
         runAccessChecks(principal, task.getList());
         return new GetTaskEditInfoResponse(task.safeId(), task.getName(), task.getDescription(),
-            task.getParent() != null ?
-                new GetTaskEditInfoResponse.ParentTask(task.getParent().safeId(), task.getParent().getName()) : null,
+            task.getParent() != null
+                ? new GetTaskEditInfoResponse.ParentTask(task.getParent().safeId(), task.getParent().getName()) : null,
             new GetTaskEditInfoResponse.SubList(task.getList().safeId(), task.getList().getName(),
                 task.getList().getGroup().safeId()));
     }

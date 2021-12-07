@@ -18,7 +18,7 @@ import { EventBus, Events } from "@/event-bus";
 import {
   AccessData,
   GroupEditInfo,
-  GroupEditInfoLists,
+  ConciseGroup,
   GroupInfo,
   GroupTree,
   List,
@@ -72,7 +72,7 @@ export const api = {
       });
   },
 
-  async getGroupEditInfoLists(id: string): Promise<GroupEditInfoLists | null> {
+  async getGroupEditInfoLists(id: string): Promise<ConciseGroup | null> {
     return axios
       .get(`/api/group/${id}/info/lists`)
       .then(value => value.data)

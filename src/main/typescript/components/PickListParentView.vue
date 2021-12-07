@@ -39,7 +39,7 @@ import Vue from "vue";
 import { Component, Prop, VModel } from "vue-property-decorator";
 import PickListParentView from "@/components/PickListParentView.vue";
 import PickTaskParentView from "@/components/PickTaskParentView.vue";
-import { ElemInfo, Group, List, ParentInfoType, SubTaskListWithChildren, Task } from "@/models";
+import { ConciseGroup, ConciseList, ElemInfo, ParentInfoType } from "@/models";
 
 @Component({ name: "PickListParentView", components: { PickListParentView, PickTaskParentView } })
 export default class extends Vue {
@@ -47,13 +47,13 @@ export default class extends Vue {
   private readonly objectType!: "LIST" | "TASK";
 
   @Prop({ default: [] })
-  private readonly items!: List[];
+  private readonly items!: ConciseList[];
 
   @VModel()
   private model!: ElemInfo;
 
   @Prop()
-  private readonly group!: Group | null;
+  private readonly group!: ConciseGroup | null;
 
   private toggleRotation(id: number): void {
     const chevron = document.getElementById(this.listChevronId(id));
@@ -70,7 +70,7 @@ export default class extends Vue {
     return `list-${id}-children`;
   }
 
-  private toggleSelection(type: ParentInfoType, object: List | Group): void {
+  private toggleSelection(type: ParentInfoType, object: ConciseList | ConciseGroup): void {
     this.toggleRotation(object.id);
     this.model = { id: object.id, object: object, type: type };
   }
@@ -83,17 +83,12 @@ export default class extends Vue {
     return this.model.type == type && this.model.id == id;
   }
 
-  private displayChevron(item: SubTaskListWithChildren): boolean {
+  private displayChevron(item: ConciseList): boolean {
     if (this.objectType === "LIST") {
       return item.children.length > 0;
     } else {
       return item.children.length > 0 || item.tasks.length > 0;
     }
   }
-}
-
-export interface ObjectToMove {
-  object: Task | List;
-  type: "TASK" | "LIST";
 }
 </script>

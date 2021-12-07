@@ -1,5 +1,6 @@
 package kika.domain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -21,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 @NoArgsConstructor
 @Table(name = "task")
+@SuppressFBWarnings("FCCD_FIND_CLASS_CIRCULAR_DEPENDENCY")
 public class Task extends AutoPersistableAuditable {
     @Setter
     @Column(name = "name")

@@ -73,7 +73,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import BreadcrumbNavbarComponent from "@/components/BreadcrumbNavbarComponent.vue";
 import PickParentComponent from "@/components/PickParentComponent.vue";
-import { ElemInfo, GroupEditInfoLists, NavbarItem } from "@/models";
+import { ElemInfo, ConciseGroup, NavbarItem } from "@/models";
 import { api } from "@/backend";
 import { appModule } from "@/store/app-module";
 // import {settingsModule} from "@/store/settings-module";
@@ -100,7 +100,7 @@ export default class extends Vue {
   private groupId_: string = "-1";
   private parent: ElemInfo | null = null;
 
-  private group!: GroupEditInfoLists;
+  private group!: ConciseGroup;
   // private groupsToChooseFrom = [{ value: "-1", text: "-- Выбрать группу --", disabled: true }];
 
   private loaded: boolean = false;
@@ -143,7 +143,11 @@ export default class extends Vue {
     if (this.parentListId != null) {
       const parentList = await api.getListEditInfo(this.parentListId);
       if (parentList != null) {
-        this.parent = { id: parentList.id, object: parentList, type: "LIST" };
+        this.parent = {
+          id: parentList.id,
+          object: { id: parentList.id, name: parentList.name, children: [], tasks: [] },
+          type: "LIST"
+        };
         console.log(this.navbarItems);
         this.navbarItems.push({ id: +parentList.id, name: parentList.name, type: "LIST" });
         console.log(this.navbarItems);

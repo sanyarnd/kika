@@ -13,8 +13,10 @@
       <b-list-group v-for="(user, key) in specialAccess.accounts" :key="key" flush>
         <b-list-group-item
           v-if="specialAccess.set"
-          :class="(key === 0 ? 'rounded-top' : key === specialAccess.accounts.length - 1 ? 'rounded-bottom' : '') +
-           (appStore.getters.account.id === user.id ? 'text-secondary' : 'text-dark')"
+          :class="
+            (key === 0 ? 'rounded-top' : key === specialAccess.accounts.length - 1 ? 'rounded-bottom' : '') +
+            (appStore.getters.account.id === user.id ? 'text-secondary' : 'text-dark')
+          "
           :disabled="appStore.getters.account.id === user.id"
           button
           class="border-0"

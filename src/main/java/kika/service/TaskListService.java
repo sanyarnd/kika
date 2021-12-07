@@ -1,15 +1,19 @@
 package kika.service;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import kika.controller.request.EditTaskListRequest;
-import kika.controller.response.*;
+import kika.controller.response.AccountWithAccess;
+import kika.controller.response.GetListEditInfoResponse;
+import kika.controller.response.GetListInfoResponse;
+import kika.controller.response.GetTaskListResponse;
+import kika.controller.response.GetTaskListTaskResponse;
+import kika.controller.response.GetTaskListTasksResponse;
+import kika.controller.response.TaskListSpecialAccessResponse;
 import kika.domain.Account;
 import kika.domain.AccountRole;
 import kika.domain.AccountSpecialAccess;
@@ -316,10 +320,15 @@ public class TaskListService {
         runAccessChecks(principal, list);
         return new GetListInfoResponse(list.safeId(),
             list.getName(),
-            new GetListInfoResponse.SubGroup(list.getGroup().safeId(), list.getGroup().getName(), list.getGroup().getRole(principal.accountId())),
-            list.getParent() != null ? new GetListInfoResponse.ParentTaskList(list.getParent().safeId(), list.getParent().getName()) : null,
-            list.getChildren().stream().map(child -> new GetListInfoResponse.ChildTaskList(child.safeId(), child.getName())).toList(),
-            list.rootTasks().stream().map(task -> new GetListInfoResponse.SubTask(task.safeId(), task.getName(), task.getStatus())).toList());
+            new GetListInfoResponse.SubGroup(list.getGroup().safeId(), list.getGroup().getName(),
+                list.getGroup().getRole(principal.accountId())),
+            list.getParent() != null
+                ? new GetListInfoResponse.ParentTaskList(list.getParent().safeId(), list.getParent().getName()) : null,
+            list.getChildren().stream()
+                .map(child -> new GetListInfoResponse.ChildTaskList(child.safeId(), child.getName())).toList(),
+            list.rootTasks().stream()
+                .map(task -> new GetListInfoResponse.SubTask(task.safeId(), task.getName(), task.getStatus()))
+                .toList());
     }
 
     @Transactional
@@ -327,8 +336,11 @@ public class TaskListService {
         TaskList list = taskListRepository.getById(id);
         TaskListSpecialAccessResponse accountsWithAccess = getAccountsWithAccess(id, principal);
         return new GetListEditInfoResponse(list.safeId(), list.getName(),
-            new GetListEditInfoResponse.SubGroup(list.getGroup().safeId(), list.getGroup().getName(), list.getGroup().getRole(principal.accountId())),
-            list.getParent() != null ? new GetListEditInfoResponse.ParentTaskList(list.getParent().safeId(), list.getParent().getName()) : null,
+            new GetListEditInfoResponse.SubGroup(list.getGroup().safeId(), list.getGroup().getName(),
+                list.getGroup().getRole(principal.accountId())),
+            list.getParent() != null
+                ? new GetListEditInfoResponse.ParentTaskList(list.getParent().safeId(), list.getParent().getName())
+                : null,
             accountsWithAccess);
     }
 }
